@@ -15,9 +15,29 @@ function create({ cwd, input, args = [] }) {
   return spawnSync(process.execPath, [join(scripts, "create.mjs"), ...args], { cwd, input: JSON.stringify(input), encoding: "utf8" });
 }
 
+// A project folder that is set up, which create.mjs asks for.
+function project() {
+  const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+  mkdirSync(join(cwd, ".agents", "artifacts"), { recursive: true });
+  writeFileSync(join(cwd, ".agents", "artifacts", "config.json"), '{"target":"local"}');
+  return cwd;
+}
+
 describe("create.mjs", () => {
-  it("writes the artifact as a site of its own and prints the id and path", () => {
+  it("stops in a project that is not set up and names the setup reference", () => {
     const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    try {
+      const res = create({ cwd, input: sample });
+      equal(res.status, 1);
+      match(res.stderr, /not set up yet\. Read references\/setup\.md/);
+      equal(existsSync(join(cwd, ".agents")), false);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it("writes the artifact as a site of its own and prints the id and path", () => {
+    const cwd = project();
     try {
       const res = create({ cwd, input: sample });
       equal(res.status, 0, res.stderr);
@@ -58,7 +78,7 @@ describe("create.mjs", () => {
   });
 
   it("makes an id from the title and drops an apostrophe", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const res = create({ cwd, input: { ...sample, title: "Last week's signups, Q3!" } });
       equal(res.status, 0, res.stderr);
@@ -69,7 +89,7 @@ describe("create.mjs", () => {
   });
 
   it("numbers a made-up id that is taken", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const ids = [1, 2, 3].map(() => JSON.parse(create({ cwd, input: sample }).stdout).id);
       equal(ids[1], `${ids[0]}-2`);
@@ -81,7 +101,7 @@ describe("create.mjs", () => {
   });
 
   it("fails when a given id exists", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       equal(create({ cwd, input: { ...sample, id: "intro" } }).status, 0);
       const res = create({ cwd, input: { ...sample, id: "intro" } });
@@ -93,7 +113,7 @@ describe("create.mjs", () => {
   });
 
   it("rejects an id that is not a plain folder name", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const res = create({ cwd, input: { ...sample, id: "../escape" } });
       equal(res.status, 1);
@@ -104,7 +124,7 @@ describe("create.mjs", () => {
   });
 
   it("rejects a spec with a broken structure", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const spec = { root: "page", elements: { page: { type: "Page", props: {}, children: ["gone"] } } };
       const res = create({ cwd, input: { title: "Broken", spec } });
@@ -116,7 +136,7 @@ describe("create.mjs", () => {
   });
 
   it("rejects a spec whose root is not a Page", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const spec = { root: "stack", elements: { stack: { type: "Stack", props: {} } } };
       const res = create({ cwd, input: { title: "Old format", spec } });
@@ -128,7 +148,7 @@ describe("create.mjs", () => {
   });
 
   it("names every element that breaks the spec rules or has a bad prop", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const spec = {
         root: "page",
@@ -161,7 +181,7 @@ describe("create.mjs", () => {
   });
 
   it("accepts props left out and values bound to state", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const spec = {
         root: "page",
@@ -182,7 +202,7 @@ describe("create.mjs", () => {
   });
 
   it("takes the project's components and import map entries", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const artifacts = join(cwd, ".agents", "artifacts");
       mkdirSync(join(artifacts, "components", "lib"), { recursive: true });
@@ -252,7 +272,7 @@ describe("create.mjs", () => {
   });
 
   it("snapshots git-backed diff cards", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const git = (...args) => execFileSync("git", args, { cwd });
       git("init", "-b", "main");
@@ -286,7 +306,7 @@ describe("create.mjs", () => {
   });
 
   it("snapshots a whole change as one card per file", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const git = (...args) => execFileSync("git", args, { cwd });
       git("init", "-b", "main");
@@ -345,7 +365,7 @@ describe("create.mjs", () => {
   });
 
   it("rejects a Diff that does not say what to show", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const spec = {
         root: "page",
@@ -373,7 +393,7 @@ describe("create.mjs", () => {
   });
 
   it("puts a page in local or in remote, and an id names one page in both", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const run = ({ args = [], input }) =>
         spawnSync(process.execPath, [join(scripts, "create.mjs"), ...args], { cwd, input: JSON.stringify(input), encoding: "utf8" });
@@ -408,7 +428,7 @@ describe("create.mjs", () => {
   });
 
   it("stops a page with a diff from git on its way to remote until the user was asked", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
+    const cwd = project();
     try {
       const git = (...args) => execFileSync("git", args, { cwd });
       git("init", "-b", "main");

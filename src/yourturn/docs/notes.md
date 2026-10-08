@@ -17,9 +17,8 @@ Worth doing before a release.
   host it only saw a page behind a login, which it let through as it should.
 - A project component under the policy of the page. The browser check ran
   the built-ins only.
-- A code review by an agent in a fresh session. The guided review wording in
-  `SKILL.md` and `references/authoring.md` was used once, by the agent that
-  wrote it. Its shape changed after that run: the verdict moved to the front
+- A code review by an agent in a fresh session. The guided review wording,
+  now in `references/review.md`, was used once, by the agent that wrote it. Its shape changed after that run: the verdict moved to the front
   and each decision sits right after its card.
 - How often the description makes the skill trigger. It was sharpened on
   2026-10-08 for a topic the user wants explained and softened the same day
@@ -67,7 +66,7 @@ by form POST with the policy on.
   already tells agents to keep data in `assets/`.
 - **Artifacts show up as changes.** `.agents/artifacts/` is untracked, so it
   appears in `git status`, in `changes.mjs` and in a dirty-tree diff review.
-  "Setup" in `SKILL.md` writes the `.gitignore` that ends this, but only in a
+  `references/setup.md` writes the `.gitignore` that ends this, but only in a
   project where the user chose not to commit them.
 - **The import map versions are kept in sync by hand.** `public/index.html`
   pins what `package.json` installs. Nothing checks that they match.
@@ -178,8 +177,8 @@ down where something was. Add to the end.
   from a real deploy: the first deploy of a Vercel project becomes production
   whatever the flags, and the production domain is public on the free plan.
   Two test pages were public for about a minute. The fix is an empty page as
-  the production deploy and `--target preview` for real pages. "Setup" in
-  `SKILL.md` has the rule.
+  the production deploy and `--target preview` for real pages.
+  `references/setup.md` has the rule.
 - **A login can cost the session.** A browser that is already logged in to
   the host keeps the fragment through the redirect, seen in Brave. A login
   form drops it, seen in Safari. The page then offers "Copy response" with a
@@ -416,3 +415,19 @@ A fresh agent that read only the skill folder wrote a chart component around
   loaded it anyway. The skills CLI did not and found no skill, which showed
   on the first install from GitHub. Check a new description with
   `npx skills add <path to the repo> --list`.
+- **Setup and reviews are references of their own**, `references/setup.md`
+  and `references/review.md`. `SKILL.md` and `authoring.md` are read for
+  every page, setup is needed once per project and the review rules only for
+  a review. `SKILL.md` went from about 3600 words to 2400 and `authoring.md`
+  from 3650 to 2800. The text was moved as it was and only its pointers
+  changed. `SKILL.md` keeps the trigger of a review and the guards. Also out
+  of `SKILL.md`: the quick shape example and the table of goals, which
+  repeated `authoring.md`, and the paragraphs on esm.sh, the server and the
+  version check, which the README and the design have. Turned down: tighter
+  wording, an agent misses a rule in dense text. No fresh session has tried
+  whether an agent reads the two files when it should.
+- **`create.mjs` stops in a project with no `config.json`** and names
+  `references/setup.md`. Before it fell back to local and said nothing, so
+  only the prose in `SKILL.md` made setup happen, and that prose is now one
+  step of the workflow. The user chose the stop over the step alone.
+  `open.mjs` does not check, a page it opens was made by `create.mjs`.

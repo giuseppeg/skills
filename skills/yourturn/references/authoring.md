@@ -5,6 +5,8 @@ user understand something you made or found (a change set, an architecture, a
 bug, a plan), to collect input, or both. It replaces a wall of chat text with a
 page that is easy to read and can be read aloud.
 
+A code or PR review has rules of its own, see `review.md`.
+
 ## The format
 
 ```json
@@ -148,102 +150,6 @@ Follow the shared writing rules in `SKILL.md`. On top of those:
 - A page that only collects input can be shorter: one or two sections, with a
   line of `Text` before the fields that says what they are for.
 
-## Guided review
-
-This is the guided review of "Code and PR reviews" in `SKILL.md`. Use it when
-the user asks to review a PR or a change set, their own or someone else's. A
-user who only asks to explain changes gets a plain page with no review. It is
-the same page with the same plain style. The review comes first, see the
-steps in `SKILL.md`. Then write the page.
-
-The reader should understand the change, hear the verdict, then deal with
-each thing where they meet it. People act on a problem as soon as they see
-it. So a problem is explained once and decided right there, and never held
-back for the end.
-
-1. `overview`: what the change does and why, in 1 to 3 sentences.
-2. First section, the verdict. Its heading says it, like "Good to go", "Good
-   to go after two fixes" or "Not yet". Then what the change touches, and one
-   sentence per thing to be aware of. Only name each one, the detail comes
-   below. Say so when there is nothing. Never pad.
-3. One section per thing that is worth the reader's time, grouped by intent,
-   not by file, from broad to specific. That is every problem that needs
-   their decision, and what they should know even when nothing is wrong with
-   it. Always show a new or changed contract: a type, an interface, a config
-   key, a public API. The reader has to learn it. A section has:
-   - A short `Text`: what this is and why it matters. For a problem, what is
-     wrong and what would happen, in plain words. A hard part gets more
-     explanation, never less: do not skip something because it is complex.
-   - A git-backed `Diff` card (see above).
-   - For a problem, a note in `comments` on the card, with an `author` like
-     "Agent Reviewer". It is the same as the reader's comments on lines, only
-     with an author. The `Text` already explained the problem, so do not say
-     it again: the comment is one short sentence that points at the spot and
-     gives the fix when you know it. Start a doubt with "Question:". Line
-     numbers are new-file lines, check them against the file.
-   - For a problem, the input for its decision right after the card: a
-     `Checkbox` like "Fix this", checked when you recommend it, or a
-     `RadioGroup` when there is more than one way. For code you should not
-     change, like someone else's PR, ask whether to pass the finding on.
-
-   When a section depends on a later one, say so in one sentence.
-4. Last section, only when needed, "Smaller things": what belongs to no
-   line, like a test that is missing, and the nits, one sentence each. One
-   `Checkbox` asks whether to fix the nits. No cards here.
-
-Comments are not read aloud, which is one more reason the `Text` says the
-problem. Skip `comments` on cards with nothing to flag. The page adds the
-"Anything to add?" box itself.
-
-## Raw diff review
-
-Use this only when the user asks for the raw diff. A review is a guided one
-by default, see "Code and PR reviews" in `SKILL.md` and the section above.
-This one shows the changes with no tour, for a user who wants to read them
-alone and comment on lines.
-
-A `Diff` with a `source` and no `path` shows the whole change, one card per
-changed file. You write no code into the spec, `create.mjs` reads git.
-
-```json
-{
-  "title": "Review the auth changes",
-  "spec": {
-    "root": "page",
-    "elements": {
-      "page": { "type": "Page", "props": { "width": "wide" }, "children": ["changes"] },
-      "changes": { "type": "Section", "props": { "heading": "Changes" }, "children": ["all"] },
-      "all": {
-        "type": "Diff",
-        "props": {
-          "source": { "mode": "dirty-tree", "paths": ["src/auth.ts", "src/session.ts"] },
-          "comments": [
-            { "path": "src/auth.ts", "author": "Agent Reviewer", "startLine": 24, "endLine": 29, "body": "Validation now happens before the session is made." }
-          ]
-        }
-      }
-    }
-  }
-}
-```
-
-- Leave `paths` out to show every changed file. Give it to narrow the review.
-- Make the page `"wide"`, so long lines fit.
-- The outline lists the files under the heading of their section.
-- Each of your `comments` names the `path` of its file. A path that is not in
-  the change is an error.
-- Files with no lines to show, like a binary, a symlink or a plain rename,
-  are named in one line under the cards.
-- The user's comments on lines come back in `result.comments` and their
-  overall note in `result.comment`, like on any page.
-- It is a normal page, so it can also have an `overview`, text before the
-  cards and inputs after them, for example a "Ship it?" question.
-
-A change may hold up to 100 files, 1 MB of patch per file and 10 MB in all.
-Over that `create.mjs` fails and says which limit was hit, so narrow `paths`.
-A file over 1 MB is shown as its patch only, the lines around its changes
-cannot be expanded.
-
 ## Text, code and images
 
 `Text`, `Heading`, the `note` of a card and the steps of a `StepNav` are read
@@ -272,11 +178,11 @@ type Code = {
   path: string; // shown in the card header
   content: string; // plain code
   note?: string | null; // one plain sentence on why it matters, read aloud
-  comments?: CardComment[]; // your review notes, see "Guided review"
+  comments?: CardComment[]; // your review notes, see `review.md`
 };
 
 type Diff = {
-  path?: string; // repo-relative when using source. Without it: the whole change, see "Raw diff review"
+  path?: string; // repo-relative when using source. Without it: the whole change, see `review.md`
   note?: string | null;
   source?: DiffSource; // the real change from git
   oldPath?: string; // previous name, only for a renamed file

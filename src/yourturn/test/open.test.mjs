@@ -15,6 +15,8 @@ const sample = readFileSync(join(scripts, "..", "examples", "sample-spec.json"),
 // A project folder holding one artifact with the id "intro", in local/ or in remote/.
 function project({ target = "local" } = {}) {
   const cwd = mkdtempSync(join(tmpdir(), "yourturn-open-test-"));
+  mkdirSync(join(cwd, ".agents", "artifacts"), { recursive: true });
+  writeFileSync(join(cwd, ".agents", "artifacts", "config.json"), JSON.stringify({ target }));
   const input = JSON.stringify({ ...JSON.parse(sample), id: "intro" });
   equal(spawnSync(process.execPath, [join(scripts, "create.mjs"), "--target", target], { cwd, input }).status, 0);
   return cwd;

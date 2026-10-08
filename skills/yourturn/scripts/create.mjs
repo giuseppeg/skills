@@ -11,11 +11,12 @@
 // The artifact lands in .agents/artifacts/local/<id>/ or in
 // .agents/artifacts/remote/<id>/ under the project root, which is the git top
 // level, or the current directory outside a repo. The target comes from
-// config.json unless the option says otherwise. remote/ is the only folder a
-// deploy uploads, so a page in local/ never leaves the machine. A page that
-// holds source code from git is only written to remote/ with --code-ok, which
-// says the user was asked. In local/ it prints "confirm": ask the user before
-// it is ever moved to remote/.
+// config.json unless the option says otherwise. A project with no config.json
+// is not set up and gets no page, see references/setup.md. remote/ is the
+// only folder a deploy uploads, so a page in local/ never leaves the machine.
+// A page that holds source code from git is only written to remote/ with
+// --code-ok, which says the user was asked. In local/ it prints "confirm":
+// ask the user before it is ever moved to remote/.
 //
 // The folder is a static site of its own: the spec in entry.json, a copy of
 // the viewer and of the project's components in _core/, and index.html with
@@ -63,7 +64,7 @@ try {
   fail(`could not parse stdin as JSON: ${err.message}`);
 }
 if (raw?.type === "diff") {
-  fail("a diff review is a page now: put a Diff with a source and no path in a Section, see references/authoring.md");
+  fail("a diff review is a page now: put a Diff with a source and no path in a Section, see references/review.md");
 }
 const input = inputSchema.safeParse(raw);
 if (!input.success) fail(`invalid input, expected { id?, title, spec }:\n${z.prettifyError(input.error)}`);
@@ -75,10 +76,18 @@ if (!valid) fail(`invalid spec:\n${issues.map((i) => `- ${i.message}`).join("\n"
 const root = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).stdout?.trim() || process.cwd();
 const artifacts = join(root, ".agents", "artifacts");
 
+// The config is written once, from the user's answers. Without it nobody
+// asked them where pages go, so nothing is written.
 const configPath = join(artifacts, "config.json");
+if (!existsSync(configPath)) {
+  fail(
+    `no ${configPath}, so this project is not set up yet. Read references/setup.md, ask the user and write the ` +
+      "config. Then run this again."
+  );
+}
 const config = z
   .looseObject({ target: z.enum(["local", "remote"]).optional(), imports: z.record(z.string(), z.string()).optional() })
-  .safeParse(existsSync(configPath) ? JSON.parse(readFileSync(configPath, "utf8")) : {});
+  .safeParse(JSON.parse(readFileSync(configPath, "utf8")));
 if (!config.success) fail(`invalid ${configPath}:\n${z.prettifyError(config.error)}`);
 const target = args.values.target ?? config.data.target ?? "local";
 if (target !== "local" && target !== "remote") fail(`unknown target '${target}'\n${usage}`);

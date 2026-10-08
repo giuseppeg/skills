@@ -95,7 +95,7 @@ Result prints to stdout. Add `--no-open` for headless. `npm test` in
   page. `create.mjs` writes a page with a diff from git into `remote/` only
   with `--code-ok`, which says the user was asked. The
   setup of a project is `.agents/artifacts/config.json`, written by the agent
-  from "Setup" in `SKILL.md`.
+  from `references/setup.md`. `create.mjs` stops in a project that has none.
 - Notices are sentences `open.mjs` adds to the result line, for the agent to
   show: a newer version and a donation note. The newest version is the `version` in
   `skills/yourturn/SKILL.md` on `main` of the public repo, so a release is a

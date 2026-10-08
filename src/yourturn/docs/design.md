@@ -459,7 +459,10 @@ server.
 `.agents/artifacts/config.json`. If it is missing the skill asks the user once
 and writes the file. It asks whether pages open locally or from a deployment,
 how to deploy if remote, and whether artifacts and answers are committed to
-git. A request in the user's prompt overrules the config for that run.
+git. The questions are in `references/setup.md`, which the agent reads only
+then. `create.mjs` exits `1` in a project with no config and names that file,
+so a page is never made before the user was asked. A request in the user's
+prompt overrules the config for that run.
 
 The config is per project because each project can belong to a different
 person or organisation, with its own deploy target and rules.
@@ -783,7 +786,7 @@ The scripts are in `skills/yourturn/scripts/`. `src/` and `public/` are in
 
 | File | What is in it |
 |---|---|
-| `scripts/create.mjs` | Reads `{ id?, title, spec }` from stdin, checks the structure, the spec rules, the props of every built-in element and the rules of a `Diff`, resolves `source` on `Diff` elements: one file with a `path`, the whole change without. Writes into `local/` or `remote/` by `target` in the config or `--target`, prints `confirm` for a page with a diff from git unless `config.local.json` has `confirmCode: false`. Reads `imports` from `config.json` and the names in the components folder. Writes `entry.json`, copies `dist/_core/` and the components, writes `index.html` from the template. |
+| `scripts/create.mjs` | Reads `{ id?, title, spec }` from stdin, checks the structure, the spec rules, the props of every built-in element and the rules of a `Diff`, resolves `source` on `Diff` elements: one file with a `path`, the whole change without. Stops in a project with no `config.json`. Writes into `local/` or `remote/` by `target` in the config or `--target`, prints `confirm` for a page with a diff from git unless `config.local.json` has `confirmCode: false`. Reads `imports` from `config.json` and the names in the components folder. Writes `entry.json`, copies `dist/_core/` and the components, writes `index.html` from the template. |
 | `scripts/open.mjs` | Opens one artifact, waits, writes the answer file, prints the result line. Adds `notices` to that line: the weekly check of `SKILL.md` on `main` and the donation note, with their times in `config.local.json`. Finds the artifact in `local/` or `remote/`, and that folder is the target. Reads `url` from `config.json` or `--url`. `--target local` serves a remote artifact from the machine. Listens on any free port. It is the one-shot loopback server itself: `Host` check, static serving of `index.html`, `entry.json`, `_core/` and `assets/` of the artifact folder, or nothing for a remote target, `/answer` with the token and the "Sent" page as its reply, the timeout and the browser open helper. |
 | `scripts/git-collect.mjs` | Git collection. `collectDiff` gives the patches of a change, `collectChange` adds the full old and new contents of each text file, `collectFileContents` does that for one file and applies `contains`. |
 | `scripts/select-changes.mjs`, `changes.mjs` | The `contains` filter and the script that lists changes. `changes.mjs` takes `diffSourceSchema` from `dist/catalog.mjs`. |
