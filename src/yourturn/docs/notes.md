@@ -411,3 +411,8 @@ A fresh agent that read only the skill folder wrote a chart component around
   production address had no such page. Both previews were removed after.
 - **The skill folder has its own copy of the `LICENSE`.** An install copies
   only that folder, and the MIT notice should travel with every copy.
+- **The description in `SKILL.md` is a quoted string.** It holds a colon
+  followed by a space, which plain YAML reads as a nested key. Claude Code
+  loaded it anyway. The skills CLI did not and found no skill, which showed
+  on the first install from GitHub. Check a new description with
+  `npx skills add <path to the repo> --list`.
