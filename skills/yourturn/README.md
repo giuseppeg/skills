@@ -36,8 +36,7 @@ decision from you. A simple yes or no stays in chat.
 ### Make it trigger more
 
 Until an agent loads a skill it only sees its name and description. If you
-want pages more often, add a line like this to your global agent
-instructions, for example `~/.claude/CLAUDE.md`:
+want pages more often, add a line like this to your global `AGENTS.md`:
 
 ```
 When a reply would lay out options, need me to decide something or run longer
