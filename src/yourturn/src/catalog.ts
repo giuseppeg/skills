@@ -14,6 +14,9 @@ const option = z.union([
   z.object({ label: z.string(), value: z.string() })
 ]);
 
+// A tone tells groups apart and means nothing by itself, see the theme in styles.css.
+const tone = z.enum(["blue", "green", "orange", "violet"]);
+
 const stepNavStep = z.object({
   title: z.string().min(1),
   detail: z.string().nullish(),
@@ -75,9 +78,10 @@ export const catalog = defineCatalog(schema, {
       })
     },
     Card: {
-      description: "Bordered container with an optional title.",
+      description: "Bordered container with an optional title. A tone marks it as part of a group, like the nodes of a diagram with the same tone.",
       props: z.object({
-        title: z.string().nullish()
+        title: z.string().nullish(),
+        tone: tone.nullish()
       })
     },
     Heading: {
@@ -203,13 +207,14 @@ export const catalog = defineCatalog(schema, {
     },
     DiagramFlow: {
       description:
-        "Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer.",
+        "Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer. A node can take a tone to tell groups apart, like client and server.",
       props: z.object({
         title: z.string().nullish(),
         nodes: z.array(z.object({
           id: z.string().min(1),
           label: z.string().min(1),
-          detail: z.string().nullish()
+          detail: z.string().nullish(),
+          tone: tone.nullish()
         })).min(1),
         edges: z.array(z.object({
           from: z.string().min(1),

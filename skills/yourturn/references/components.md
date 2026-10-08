@@ -164,6 +164,12 @@ not repeated here. The rest of the file shows how the built-ins use it.
   a library that draws on one.
 - **The page is grey.** A hue is only for the meaning its variable has, like
   an error or what is active. Do not use one to decorate.
+- **Tones tell groups apart.** `--blue`, `--green`, `--orange` and `--violet`
+  mean nothing by themselves. Use them wherever groups need telling apart,
+  like the series of a chart, as a line or as a fill. Text on a fill is a
+  dark shade of the same hue,
+  `color-mix(in srgb, var(--blue) 30%, var(--tone-fg))`. Say in words what
+  each tone is, and never use one for a state.
 - **Light and dark mode come with the variables.** Do not write a dark rule
   and do not check the colour scheme.
 - **Need a shade in between? Mix two variables**, like

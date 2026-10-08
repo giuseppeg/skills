@@ -190,6 +190,38 @@ describe("open.mjs", () => {
     }
   });
 
+  it("stops when the site gives out the page with no login, unless the config says it is public", async () => {
+    const cwd = project({ target: "remote" });
+    const configPath = join(cwd, ".agents", "artifacts", "config.json");
+    const entry = readFileSync(join(cwd, ".agents", "artifacts", "remote", "intro", "entry.json"));
+    // A site with no login, and one that sends everybody to a login page.
+    const open_ = createServer((req, res) => (req.url === "/intro/entry.json" ? res.end(entry) : res.writeHead(404).end()));
+    const login = createServer((req, res) => res.end("<html>Log in</html>"));
+    await Promise.all([once(open_.listen(0, "127.0.0.1"), "listening"), once(login.listen(0, "127.0.0.1"), "listening")]);
+    const address = (server) => `http://127.0.0.1:${server.address().port}`;
+    try {
+      const stopped = open({ cwd, args: ["--url", address(open_)] });
+      const stderr = [];
+      stopped.stderr.on("data", (chunk) => stderr.push(chunk));
+      equal((await once(stopped, "close"))[0], 1);
+      match(Buffer.concat(stderr).toString("utf8"), /is public: it gave out the page with no login[\s\S]*"public": true/);
+
+      const behindLogin = open({ cwd, args: ["--url", address(login)] });
+      const meant = (writeFileSync(configPath, '{"target":"remote","public":true}'), open({ cwd, args: ["--url", address(open_)] }));
+      try {
+        equal((await pageUrl({ child: behindLogin })).pathname, "/intro/");
+        equal((await pageUrl({ child: meant })).pathname, "/intro/");
+      } finally {
+        behindLogin.kill();
+        meant.kill();
+      }
+    } finally {
+      open_.close();
+      login.close();
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
   it("serves a remote artifact from here with --target local, and takes another address with --url", async () => {
     const cwd = project({ target: "remote" });
     writeFileSync(join(cwd, ".agents", "artifacts", "config.json"), '{"target":"remote","url":"https://pages.example"}');

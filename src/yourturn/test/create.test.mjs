@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import { deepEqual, equal, match, ok } from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -10,8 +11,8 @@ import { fileURLToPath } from "node:url";
 const scripts = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "skills", "yourturn", "scripts");
 const sample = JSON.parse(readFileSync(join(scripts, "..", "examples", "sample-spec.json"), "utf8"));
 
-function create({ cwd, input }) {
-  return spawnSync(process.execPath, [join(scripts, "create.mjs")], { cwd, input: JSON.stringify(input), encoding: "utf8" });
+function create({ cwd, input, args = [] }) {
+  return spawnSync(process.execPath, [join(scripts, "create.mjs"), ...args], { cwd, input: JSON.stringify(input), encoding: "utf8" });
 }
 
 describe("create.mjs", () => {
@@ -43,6 +44,14 @@ describe("create.mjs", () => {
       const { imports } = JSON.parse(html.match(/<script type="importmap">([^]*?)<\/script>/)[1]);
       equal(imports.yourturn, "./_core/yourturn.js");
       match(imports.react, /^https:\/\/esm\.sh\/react@/);
+
+      // The page may only talk to the hosts of its import map and to loopback.
+      const policy = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)"/)[1];
+      const map = createHash("sha256").update(html.match(/<script type="importmap">([^]*?)<\/script>/)[1]).digest("base64");
+      match(policy, /^default-src 'none'; /);
+      ok(policy.includes(`script-src 'self' 'wasm-unsafe-eval' 'sha256-${map}' https://esm.sh;`));
+      ok(policy.includes("connect-src 'self' https://esm.sh;"));
+      ok(policy.includes("form-action http://127.0.0.1:*;"));
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
@@ -212,6 +221,7 @@ describe("create.mjs", () => {
       equal(imports.react, "./vendor/react.js");
       equal(imports["d3</script>"], "https://esm.sh/d3@7");
       match(imports.zod, /^https:\/\/esm\.sh\/zod@/);
+      match(html, /connect-src 'self' https:\/\/esm\.sh;/);
 
       // A component can only import what the import map names, or a relative file.
       writeFileSync(
@@ -397,7 +407,7 @@ describe("create.mjs", () => {
     }
   });
 
-  it("asks for a confirmation before a page with a diff from git is deployed", () => {
+  it("stops a page with a diff from git on its way to remote until the user was asked", () => {
     const cwd = mkdtempSync(join(tmpdir(), "yourturn-create-test-"));
     try {
       const git = (...args) => execFileSync("git", args, { cwd });
@@ -422,12 +432,25 @@ describe("create.mjs", () => {
       });
       const fromGit = page({ type: "Diff", props: { path: "a.txt", source: { mode: "dirty-tree", paths: ["a.txt"] } } });
       const pasted = page({ type: "Code", props: { path: "a.txt", content: "two" } });
+      // In local/ it only says so, for the day the page is moved.
       equal(JSON.parse(create({ cwd, input: fromGit }).stdout).confirm, true);
       equal(JSON.parse(create({ cwd, input: pasted }).stdout).confirm, undefined);
+
+      const remote = join(cwd, ".agents", "artifacts", "remote");
+      const stopped = create({ cwd, input: fromGit, args: ["--target", "remote"] });
+      equal(stopped.status, 1);
+      match(stopped.stderr, /holds source code[\s\S]*Ask the user first[\s\S]*--code-ok/);
+      equal(existsSync(remote), false);
+      const asked = create({ cwd, input: fromGit, args: ["--target", "remote", "--code-ok"] });
+      equal(asked.status, 0, asked.stderr);
+      equal(JSON.parse(asked.stdout).target, "remote");
+      equal(JSON.parse(asked.stdout).confirm, undefined);
+      equal(create({ cwd, input: pasted, args: ["--target", "remote"] }).status, 0);
 
       // This user said not to be asked again.
       writeFileSync(join(cwd, ".agents", "artifacts", "config.local.json"), '{"author":"Ada","confirmCode":false}');
       equal(JSON.parse(create({ cwd, input: fromGit }).stdout).confirm, undefined);
+      equal(create({ cwd, input: fromGit, args: ["--target", "remote"] }).status, 0);
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }

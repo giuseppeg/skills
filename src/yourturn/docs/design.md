@@ -276,7 +276,7 @@ any block.
 
 ```bash
 # Validate, resolve git diffs, write the artifact folder.
-cat spec.json | node scripts/create.mjs [--target local|remote]
+cat spec.json | node scripts/create.mjs [--target local|remote] [--code-ok]
 # prints {"id":"...","path":"...","target":"...","confirm"?:true}
 
 # Open an artifact, wait for the answer, save it, print it.
@@ -323,6 +323,15 @@ check fail for no reason. The page cannot report back either, it reaches
 loopback only with the submit. The proof of a deploy is the exit code of the
 deploy command, which the agent has just run. If one is missed anyway, the
 user sees the 404 page of the host and tells the agent.
+
+What a script with no login can tell is the opposite: a site that hands it
+the page hands it to anyone. So before it opens a remote page, `open.mjs`
+asks the site for `entry.json` of that page. If it gets the artifact back it
+exits `1` and says the page is public, unless the config has `public: true`.
+A login page, a `401` and a `404` all let it go on. Two limits: the check
+runs after the upload, and it sees only the address it opens. A host can
+serve the same site at a second address that is public, as Vercel does with
+the production domain.
 
 The result line is the `Result` type in "Notices". The exit codes are `0` for
 an answer, `1` for an error and `2` for a timeout. Each open has its own
@@ -467,6 +476,7 @@ type Config = {
   // one too, for the pages the user asks to publish.
   deploy?: string;
   url?: string; // base URL of that site
+  public?: boolean; // true when the user said anyone may read the site
   imports?: Record<string, string>; // merged over the default import map
   notices?: boolean; // default true, false turns off the update check and the donation note
 };
@@ -497,12 +507,20 @@ files with a JavaScript content type and use HTTPS. Any static host does this.
 deployment. For a page in `remote/` the agent runs `create.mjs`, follows
 `config.deploy`, stops if that fails, then runs `open.mjs`.
 
-**Source code asks first.** `create.mjs` prints `confirm` for a page with a
-diff read from git, since it holds whole files of the repo. The agent then
-asks the user in chat before it deploys, every time, and says where the code
-goes. A user who says not to ask again gets `confirmCode: false` in their own
-`config.local.json`, and `create.mjs` stops printing `confirm` for them. A page with
-only pasted code does not ask. During
+**Source code asks first.** A page with a diff read from git holds whole
+files of the repo. `create.mjs` refuses to write one into `remote/`: it exits
+`1` and tells the agent to ask the user where the code may go, then to run
+it again with `--code-ok` or with `--target local`. In `local/` such a page
+prints `confirm`, for the day the agent is asked to move it to `remote/`. A
+user who says not to ask again gets `confirmCode: false` in their own
+`config.local.json`, and both are off for them. A page with only pasted code
+does not ask.
+
+This is a stop and not a lock. The agent deploys with a shell, so no code of
+the skill can keep one from uploading what it wants. The stop makes sure an
+agent cannot skip the question by forgetting it. One that reads the error
+and adds the flag without asking is not caught. A confirmation the user
+clicks in the browser would catch that, see "Later, not designed". During
 setup the skill helps the user pick a service, creates the project with the
 user's own CLI and saves `deploy` and `url` in the config.
 
@@ -578,8 +596,8 @@ The two times live in `config.local.json`, so the periods are counted per person
 and project. They are not in `config.json` because that file is committed
 and shared: every answer would change a tracked file, and one person's note
 would use up the two months for everyone. `notices: false` in the config
-turns both off, and with it the only network call the scripts make on their
-own.
+turns both off. The version check and the check of a remote page against
+its own site are the only network calls the scripts make on their own.
 
 Old artifacts are not touched by an update, each one keeps its own viewer copy.
 
@@ -662,7 +680,8 @@ export function render({ props }) {
 - A user component follows the same look as the built-ins. The viewer has one
   small theme, the variables of the `:root` block in `styles.css`, which the
   build keeps readable in `dist/_core/style.css`: greys for the page, a
-  hue only for accent, success, error and warning, and one radius. They switch
+  hue only for accent, success, error and warning, four tones that only tell
+  groups apart, and one radius. They switch
   with light and dark mode. `references/components.md` has the visual rules
   and sends the agent to that block for the names, so the list lives in one
   place.
@@ -686,6 +705,23 @@ dependencies float, for example `@pierre/diffs` pulls the latest matching
 registry. A package a project adds for its own components takes `?bundle`
 in its esm.sh address, which builds its dependencies into one file, see
 `references/components.md`.
+
+A content security policy in `index.html` narrows what that code can do.
+`create.mjs` writes it from the import map: scripts and requests only from
+the page's own folder and the hosts of the map, a form only to loopback, and
+nothing else. The import map is an inline script, so the policy names it by
+its hash. A library that turns bad can then not send the page to a third
+host with a request, a socket, an image or a form. Three things it cannot
+stop. The hosts of the map are allowed, so esm.sh itself could still be sent
+the page. Code in the page can move the tab to another address. And a forged
+answer goes down the same road as a real one. A service worker as a firewall
+was looked at and dropped: it does not see sockets or a tab that moves away,
+and code in the page can remove it. The real fix is to not load code from a
+third party, see "Later, not designed".
+
+zod probes for `eval` when the first schema is made, which the policy blocks
+and the browser logs. `_core/jitless.js` turns the probe off and loads
+before `boot.js`, because the libraries make schemas as they load.
 
 Artifact ids are made from the date and the title, so they can be guessed. A
 deployment relies on the host's access control and not on secret URLs.
@@ -760,6 +796,21 @@ The scripts are in `skills/yourturn/scripts/`. `src/` and `public/` are in
 | `src/step-nav.tsx` | The step lists. Their text goes through `Prose`, so it is read aloud. |
 
 ## Later, not designed
+
+**The libraries inside the skill.** With React, json-render and zod shipped
+in `_core/`, a page with no code card would load nothing from a third party
+and open offline. Measured on 2026-10-08: 588KB minified for those, 147KB
+gzipped, where `_core/` is 80KB today. They would be built once and copied
+like the rest of `_core/`, nothing is bundled when a page is made. The diff
+view is the problem: with its grammars it is 11MB in 399 files, too much to
+copy into every page, and the pages that need it are the ones that hold
+source code. So this only helps once the diff view has an answer too, like
+one copy for all pages of a site or a short list of languages.
+
+**A click before code goes up.** A page with code would always be made in
+`local/`, and a script would open a small page that says where the code
+would go and move the folder only after the user pressed the button. An
+agent cannot fake that click.
 
 **Early check of user component props.** Split a component into a schema file
 and a render file so `create.mjs` can load the schemas in Node and fail before

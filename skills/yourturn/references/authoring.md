@@ -375,9 +375,9 @@ Submitting yields:
 |-----------|-------|-------|
 | `Stack` | `gap`: `"sm" \| "md" \| "lg"` (optional) | Vertical container. |
 | `Columns` | `gap`: `"sm" \| "md" \| "lg"` (optional) | Responsive two-column layout. Use for paired fields or content that benefits from side-by-side layout on wide screens. |
-| `Card` | `title`: string (optional) | Bordered container with optional title. Use it only for grouped subcontent that needs a visible frame. |
+| `Card` | `title`: string (optional), `tone` (optional) | Bordered container with optional title. Use it only for grouped subcontent that needs a visible frame. |
 | `Slideshow` | `slides`: `{ title, body? }[]` | Paginated slides with prev/next nav. Display-only. |
-| `DiagramFlow` | `title`: string (optional), `nodes`: `{ id, label, detail? }[]`, `edges`: `{ from, to, label? }[]` | Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer. Node ids must be unique. |
+| `DiagramFlow` | `title`: string (optional), `nodes`: `{ id, label, detail?, tone? }[]`, `edges`: `{ from, to, label? }[]` | Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer. Node ids must be unique. |
 | `StepNavHorizontal` | `steps`: `{ title, detail?, status? }[]` | Display-only step rail for short flows. Its steps are read aloud. Prefer this when progress context helps but a sidebar would waste space. |
 | `StepNavVertical` | `steps`: `{ title, detail?, status? }[]` | Display-only side rail for longer walkthroughs or dense wide layouts. Its steps are read aloud. Use only when the side space is worth it. |
 
@@ -405,6 +405,14 @@ architecture boundaries, or before/after structure. Do not use it for simple
 forms, short explanations, or obvious summaries. Put each concept in `nodes`
 once and connect them with `edges`.
 
+A node and a `Card` can take a `tone`: `"blue"`, `"green"`, `"orange"` or
+`"violet"`. A tone tells groups apart, like what runs on the machine and what
+runs on the site. It has no meaning of its own, so give the same tone to
+everything of one group, on the whole page, and say in the text or in
+`detail` what the group is. A card about the site then has the tone of the
+site's nodes. Leave it out when things are all of one kind, and never use a
+tone for good, bad or a warning.
+
 ```json
 {
   "flow": {
@@ -412,9 +420,9 @@ once and connect them with `edges`.
     "props": {
       "title": "yourturn round trip",
       "nodes": [
-        { "id": "agent", "label": "Agent", "detail": "Authors JSON spec" },
-        { "id": "browser", "label": "Browser UI", "detail": "User reviews and submits" },
-        { "id": "stdout", "label": "Agent resumes", "detail": "Reads one JSON result" }
+        { "id": "agent", "label": "Agent", "detail": "Authors JSON spec", "tone": "blue" },
+        { "id": "browser", "label": "Browser UI", "detail": "User reviews and submits", "tone": "orange" },
+        { "id": "stdout", "label": "Agent resumes", "detail": "Reads one JSON result", "tone": "blue" }
       ],
       "edges": [
         { "from": "agent", "to": "browser", "label": "render" },

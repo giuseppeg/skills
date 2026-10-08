@@ -15,3 +15,6 @@ npm-debug.log*
 # IMPORTANT: skills/yourturn/dist/ is intentionally committed.
 # It is the prebuilt, zero-install bundle the skill serves at runtime.
 # Do not add it here.
+
+# Scratch files of browser checks
+/.tmp/

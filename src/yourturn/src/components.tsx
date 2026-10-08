@@ -64,7 +64,7 @@ const components: Components<typeof catalog> = {
   ),
 
   Card: ({ props, children }) => (
-    <section className="card">
+    <section className={props.tone ? `card tone ${props.tone}` : "card"}>
       {props.title ? <h2 className="card-title">{props.title}</h2> : null}
       {children}
     </section>

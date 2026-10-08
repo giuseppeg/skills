@@ -154,7 +154,7 @@ const entryPath = join(site, "entry.json");
 // Everything that can fail is done before the wait, so an answer is never lost.
 const configPath = join(artifacts, "config.json");
 const config = z
-  .looseObject({ url: z.string().optional(), notices: z.boolean().optional() })
+  .looseObject({ url: z.string().optional(), public: z.boolean().optional(), notices: z.boolean().optional() })
   .safeParse(existsSync(configPath) ? JSON.parse(readFileSync(configPath, "utf8")) : {});
 if (!config.success) fail(`invalid ${configPath}:\n${z.prettifyError(config.error)}`);
 const target = args.values.target ?? home;
@@ -188,6 +188,23 @@ const base = target === "remote" ? url.replace(/\/+$/, "") : null;
 const path = `/${id}/`;
 const html = readFileSync(join(site, "index.html"));
 const entry = readFileSync(entryPath);
+
+// What it can tell is the opposite: this script has no login, so a site that
+// hands it the page hands it to anyone. That has to be the user's choice,
+// said with "public": true in the config. It only sees the address it opens,
+// another address of the same site can still be public.
+if (base && config.data.public !== true) {
+  const open = await fetch(`${base}${path}entry.json`, { signal: AbortSignal.timeout(3000) })
+    .then(async (res) => res.ok && (await res.json()).id === id)
+    .catch(() => false);
+  if (open) {
+    fail(
+      `${base}${path} is public: it gave out the page with no login. Tell the user now. If they did not mean that, ` +
+        `take the page down: delete ${site} and deploy again. If the site is meant to be public, put "public": true ` +
+        `into ${configPath} and run this again.`
+    );
+  }
+}
 
 const token = randomBytes(32).toString("base64url");
 let port = 0;

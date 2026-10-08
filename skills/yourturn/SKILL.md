@@ -112,7 +112,12 @@ first artifact:
    login in front of it unless it may be public.
 3. Should artifacts and answers be committed to git?
 
-Then write the two files and do not ask again.
+Then write the two files and do not ask again. Tell the user one more thing,
+once: pages come for explanations, reviews and decisions. If they want one
+for every longer reply too, they can add this line to their own agent
+instructions: _"When a reply would lay out options, need me to decide
+something or run longer than about ten lines, use the yourturn skill and
+answer with a page."_
 
 ```json
 {
@@ -130,6 +135,8 @@ Then write the two files and do not ask again.
 - `url` is the address of that site. An artifact is then at `<url>/<id>/`.
   Leave it out when every deploy gets an address of its own, and say in
   `deploy` to pass that one with `--url`.
+- `public` is `true` only when the user said the site may be public. Without
+  it `open.mjs` stops when the site gives out a page with no login.
 - `imports` is only there when a component of the project uses a package,
   see `references/components.md`.
 - `notices` is left out. Set it to `false` only when the user wants no
@@ -140,7 +147,9 @@ empty page first and fetch its addresses with no login: none may answer with
 the page. Hosts have surprises here. On Vercel the first deploy of a project
 becomes production whatever the flags, and the production domain is public on
 the free plan. So that first deploy stays an empty page and real pages go up
-with `--target preview`, which is behind the Vercel login.
+with `--target preview`, which is behind the Vercel login. `open.mjs` checks
+the one address it opens, see step 4. It cannot see a second address of the
+same site, so this proof is still yours to do.
 
 `.agents/artifacts/.gitignore` always lists `config.local.json`. Add `local/` and
 `remote/` when artifacts are not committed and `answers/` when answers are
@@ -174,7 +183,7 @@ When the user asks for the other kind of page in their prompt, pass
    own, with a copy of the viewer and of the project's components:
 
    ```bash
-   cat <<'SPEC' | node scripts/create.mjs [--target local|remote]
+   cat <<'SPEC' | node scripts/create.mjs [--target local|remote] [--code-ok]
    { "title": "...", "spec": { ... } }
    SPEC
    ```
@@ -182,9 +191,20 @@ When the user asks for the other kind of page in their prompt, pass
    Pass `--target` only when the user asks for the other kind in their
    prompt, and leave the config as it is.
 
+   **Source code does not go up unasked.** A page with a diff read from git
+   holds whole files from the repo. `create.mjs` refuses to write such a page
+   into `remote/` and exits `1`. Then ask in chat, every time: _"This page
+   holds source code from this repo. Deploying uploads it to <address>.
+   Deploy it, or keep it local?"_ Pipe the same spec again, with `--code-ok`
+   when they said to deploy it or with `--target local` when they keep it
+   local. Never pass `--code-ok` before the user answered. When they say not
+   to ask again, put `"confirmCode": false` into
+   `.agents/artifacts/config.local.json`. It is their own setting, never
+   committed, and `create.mjs` then lets such pages through.
+
    It prints `{"id":"...","path":"...","target":"..."}`, plus
-   `"confirm":true` for a page that holds source code, see step 3. Use the
-   `id` it prints. Without an
+   `"confirm":true` for a local page that holds source code, see step 3. Use
+   the `id` it prints. Without an
    `id` in the input it makes one from the date and the title, and adds a
    number when that is taken. An `id` you pass uses lowercase letters, digits
    and dashes and must be new. On a broken spec or a taken `id` it exits `1`
@@ -200,19 +220,10 @@ When the user asks for the other kind of page in their prompt, pass
    cannot see whether the page is there, a site behind a login only answers
    the user's browser.
 
-   **Ask before source code goes up.** When `create.mjs` printed
-   `"confirm":true`, the page holds whole files from the repo. Before you
-   deploy it, ask in chat, every time: _"This page holds source code from
-   this repo. Deploying uploads it to <address>. Deploy it, or keep it
-   local?"_ When they keep it local, move the folder from `remote/` to
-   `local/` and open it. When they say not to ask again, put
-   `"confirmCode": false` into `.agents/artifacts/config.local.json`. It is their
-   own setting, never committed, and `create.mjs` then stops printing
-   `confirm`.
-
    **A local page the user wants on the site.** Move its folder from
-   `local/` to `remote/`, ask as above when it holds code, deploy and open
-   it. What they typed in the local tab does not come along.
+   `local/` to `remote/`, deploy and open it. When `create.mjs` printed
+   `"confirm":true` for it, the page holds source code: ask as in step 2
+   before you move it. What they typed in the local tab does not come along.
 
 4. **Open it and wait.** `open.mjs` opens the page in a new browser tab and
    blocks until the user submits:
@@ -227,6 +238,12 @@ When the user asks for the other kind of page in their prompt, pass
    an address of its own, as hosts that give every deploy a new one do. With
    `--target local` a remote page is served from the machine, for a look
    with no deploy. A local page never opens remote.
+
+   Before it opens a remote page, `open.mjs` asks the site for it with no
+   login. When the site gives it out, anyone can read it, and `open.mjs`
+   exits `1` and says so. Tell the user at once. If they did not mean the
+   site to be public, delete the page from `remote/` and deploy again. If
+   they did, put `"public": true` into the config and run `open.mjs` again.
 
    The wait can take up to an hour, longer than most command timeouts. If your
    harness tells you when a background command exits, run `open.mjs` in the
@@ -289,7 +306,8 @@ they are committed is the user's choice.
 
 The page loads its libraries (React, the diff view) from `esm.sh` through the
 import map in its `index.html`, so the browser needs the network the first
-time. A project can point those names at another address with `imports` in
+time. A policy in the same file lets the page talk to the hosts of that map
+and to you, and to nobody else. A project can point those names at another address with `imports` in
 `.agents/artifacts/config.json`, for example at vendored files to work
 offline. An artifact made by an older yourturn has no `index.html` and
 `open.mjs` asks you to create it again.
@@ -302,9 +320,10 @@ it put in the page URL. A deployed page hands the answer over by moving the
 tab to that server, which shows "Sent. You can close this tab."
 
 At most once a week `open.mjs` fetches the `SKILL.md` of yourturn from its
-GitHub repo, to see whether a newer version is out. It is the only network
-call the scripts make on their own. It sends nothing about the project, gives
-up after a second and says nothing when it fails. `"notices": false` in
+GitHub repo, to see whether a newer version is out. It sends nothing about
+the project, gives up after a second and says nothing when it fails. The
+only other network call the scripts make on their own goes to the project's
+own site, the check before a remote page opens. `"notices": false` in
 `.agents/artifacts/config.json` turns it off, and the donation note with it.
 
 ## Result contract

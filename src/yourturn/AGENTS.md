@@ -70,10 +70,15 @@ Result prints to stdout. Add `--no-open` for headless. `npm test` in
   `.agents/artifacts/components/`, see `references/components.md`.
 - Every colour and corner in the CSS comes from the theme variables at the top of
   `src/styles.css`: greys for the page, a hue only for accent, success, error and
-  warning, one `--radius` with `corner-shape: squircle`. No colour values anywhere
+  warning, four tones that only tell groups apart, one `--radius` with
+  `corner-shape: squircle`. No colour values anywhere
   else. The rules are in "Visual rules" of `references/components.md`, which points
   at that block in the built `dist/_core/style.css` instead of listing the
   variables. That is why the stylesheet is built unminified, comments included.
+- Every page has a content security policy, written by `create.mjs` from the
+  import map. A new kind of thing the page loads, like a font or a worker,
+  needs a line there. `public/_core/jitless.js` is a file the build only
+  copies, it must load before `boot.js`.
 - `create.mjs` copies `dist/_core/` and the project's components into every
   artifact, so an artifact is a static site of its own and `open.mjs` serves only
   that folder.
@@ -82,9 +87,12 @@ Result prints to stdout. Add `--no-open` for headless. `npm test` in
   `.agents/artifacts/answers/<id>/`. Nothing is written outside the project.
   `remote/` is the only folder a deploy uploads, so a page in `local/` never
   leaves the machine. The folder a page is in says how `open.mjs` opens it.
-- `open.mjs` never deploys and never checks a deployment. For a page in
+- `open.mjs` never deploys and cannot check that a deploy happened. It does
+  check that a remote page is not public: a site that gives it the page with
+  no login stops it, unless the config has `public: true`. For a page in
   `remote/` it serves nothing and waits for the form POST of the deployed
-  page. The
+  page. `create.mjs` writes a page with a diff from git into `remote/` only
+  with `--code-ok`, which says the user was asked. The
   setup of a project is `.agents/artifacts/config.json`, written by the agent
   from "Setup" in `SKILL.md`.
 - Notices are sentences `open.mjs` adds to the result line, for the agent to

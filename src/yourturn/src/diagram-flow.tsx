@@ -5,6 +5,7 @@ type DiagramNode = {
   id: string;
   label: string;
   detail?: string | null;
+  tone?: "blue" | "green" | "orange" | "violet" | null;
 };
 
 type DiagramEdge = {
@@ -141,9 +142,9 @@ function spreadLabels(props: {
   });
 }
 
-function nodeLabel(props: { label: string; detail?: string | null }) {
+function nodeLabel(props: DiagramNode) {
   return (
-    <div className="diagram-node">
+    <div className={props.tone ? `diagram-node tone ${props.tone}` : "diagram-node"}>
       <div className="diagram-node-label">{props.label}</div>
       {props.detail ? <div className="diagram-node-detail">{props.detail}</div> : null}
     </div>

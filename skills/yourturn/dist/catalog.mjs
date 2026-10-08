@@ -16116,6 +16116,7 @@ var option = external_exports.union([
   external_exports.string(),
   external_exports.object({ label: external_exports.string(), value: external_exports.string() })
 ]);
+var tone = external_exports.enum(["blue", "green", "orange", "violet"]);
 var stepNavStep = external_exports.object({
   title: external_exports.string().min(1),
   detail: external_exports.string().nullish(),
@@ -16165,9 +16166,10 @@ var catalog = defineCatalog(schema, {
       })
     },
     Card: {
-      description: "Bordered container with an optional title.",
+      description: "Bordered container with an optional title. A tone marks it as part of a group, like the nodes of a diagram with the same tone.",
       props: external_exports.object({
-        title: external_exports.string().nullish()
+        title: external_exports.string().nullish(),
+        tone: tone.nullish()
       })
     },
     Heading: {
@@ -16289,13 +16291,14 @@ var catalog = defineCatalog(schema, {
       })
     },
     DiagramFlow: {
-      description: "Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer.",
+      description: "Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer. A node can take a tone to tell groups apart, like client and server.",
       props: external_exports.object({
         title: external_exports.string().nullish(),
         nodes: external_exports.array(external_exports.object({
           id: external_exports.string().min(1),
           label: external_exports.string().min(1),
-          detail: external_exports.string().nullish()
+          detail: external_exports.string().nullish(),
+          tone: tone.nullish()
         })).min(1),
         edges: external_exports.array(external_exports.object({
           from: external_exports.string().min(1),

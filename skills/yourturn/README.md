@@ -54,15 +54,18 @@ answer browser tab ──HTTP──► open.mjs ──stdout──► agent
 
 Pages stay on your machine. A project can also set up a static site of its
 own, so a page gets an address that can be shared. A review page holds whole
-source files, so that site needs a login in front of it.
+source files, so that site needs a login in front of it. The scripts stop a
+page with source code on its way to the site until you were asked, and stop
+again when the site turns out to be open to everyone.
 
 ## Good to know
 
 - **A page loads its libraries from a CDN.** React and the diff view come
   from [esm.sh](https://esm.sh), so the first load needs the network. It also
   means that CDN runs code in the page: it could read the page and send an
-  answer in your name. A project can point those imports at its own files
-  with `imports` in `.agents/artifacts/config.json`.
+  answer in your name. A policy in every page keeps it from talking to any
+  other host. A project can point those imports at its own files with
+  `imports` in `.agents/artifacts/config.json`.
 - **One network call a week.** The skill fetches its own `SKILL.md` from
   GitHub to see whether a newer version is out. It sends nothing about your
   project.

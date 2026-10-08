@@ -1,7 +1,8 @@
 /* The theme. Every colour and corner of the viewer comes from these variables,
    and a project component uses the same ones, see references/components.md.
-   The page is grey. A hue is only used for the four meanings below. The dark
-   values follow the system setting, so nothing else needs a dark rule. */
+   The page is grey. A hue is only used for the four meanings below, and the
+   four tones after them only tell groups apart. The dark values follow the
+   system setting, so nothing else needs a dark rule. */
 :root {
   color-scheme: light dark;
 
@@ -19,6 +20,17 @@
   --success: #16a34a; /* it worked */
   --error: #e94959; /* it failed, or it is required */
   --warning: #d97706; /* it works, but look at this */
+
+  /* Tones. They mean nothing by themselves: use them wherever groups need
+     telling apart, like the nodes of a diagram, the series of a chart or a
+     card that belongs to one group. As a fill or a line, with words that say
+     what each group is. Never use them for a state, that is what the four
+     above are for. */
+  --blue: #1f8fff;
+  --green: #00c781;
+  --orange: #ff7a1a;
+  --violet: #a259ff;
+  --tone-fg: #0a0a0a; /* text on a tone, dark in both modes. Mix some of the tone in, so it has its hue */
 
   /* Shape. A box pairs this radius with corner-shape: squircle. A round control is a 999px pill. */
   --radius: 24px;
@@ -39,6 +51,11 @@
     --success: #22c55e;
     --error: #f0616f;
     --warning: #f59e0b;
+
+    --blue: #4da6ff;
+    --green: #2ee6a0;
+    --orange: #ff9447;
+    --violet: #b98aff;
   }
 }
 
@@ -66,6 +83,29 @@ body {
   border-radius: var(--radius);
   corner-shape: squircle;
   padding: 24px;
+}
+
+/* An element with a tone: the second class names one of the four. */
+.tone.blue {
+  --tone: var(--blue);
+}
+
+.tone.green {
+  --tone: var(--green);
+}
+
+.tone.orange {
+  --tone: var(--orange);
+}
+
+.tone.violet {
+  --tone: var(--violet);
+}
+
+/* A card holds text and inputs, so its tone is a soft fill and a line. */
+.card.tone {
+  background: color-mix(in srgb, var(--tone) 16%, var(--card));
+  border-color: var(--tone);
 }
 
 .card-title {

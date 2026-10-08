@@ -13,10 +13,10 @@ is the author of the skill.
 
 Worth doing before a release.
 
-- A real deploy with the new folders: a page made in `remote/`, the question
-  before source code goes up, and a local page moved to `remote/`. The two
-  folders were only checked with a static server on another local port, in headless
-  Chromium, Firefox and WebKit.
+- The check for a public site finding a real public site. Against a real
+  host it only saw a page behind a login, which it let through as it should.
+- A project component under the policy of the page. The browser check ran
+  the built-ins only.
 - A code review by an agent in a fresh session. The guided review wording in
   `SKILL.md` and `references/authoring.md` was used once, by the agent that
   wrote it. Its shape changed after that run: the verdict moved to the front
@@ -30,7 +30,10 @@ Worth doing before a release.
 
 Seen by the user in a real browser: a review of 29 files, the guided review,
 follow-up pages with step lists, choices on a card and the feedback list, a
-chart component from an npm package and the feedback buttons.
+chart component from an npm package, the feedback buttons, the tones on a
+diagram, and two pages with code on a Vercel preview behind its login, one
+made for `remote/` and one moved there from `local/`. Both sent their answer
+by form POST with the policy on.
 
 ## Known problems
 
@@ -57,7 +60,11 @@ chart component from an npm package and the feedback buttons.
   again.
 - **Moving a page between the folders is a manual step.** The agent moves the
   folder, as `SKILL.md` says. No script does it and nothing checks that a
-  page moved to `remote/` was confirmed by the user.
+  page moved to `remote/` was confirmed by the user. The stop in
+  `create.mjs` only covers a page made for `remote/`.
+- **A project component cannot fetch from another host.** The policy of the
+  page allows its own folder and the hosts of the import map. `components.md`
+  already tells agents to keep data in `assets/`.
 - **Artifacts show up as changes.** `.agents/artifacts/` is untracked, so it
   appears in `git status`, in `changes.mjs` and in a dirty-tree diff review.
   "Setup" in `SKILL.md` writes the `.gitignore` that ends this, but only in a
@@ -355,3 +362,50 @@ A fresh agent that read only the skill folder wrote a chart component around
   viewer.
 - **The title of a diagram has the colour of a heading**, `--fg`. It had the
   colour of a paragraph.
+- **A page with code is stopped on its way to `remote/`.** `create.mjs`
+  exits until it is run again with `--code-ok`, which says the user was
+  asked. Before, it printed `confirm` and trusted the agent to act on it.
+  Code cannot keep an agent with a shell from uploading something, it can
+  keep one from skipping the question by accident. A click by the user in
+  the browser is the stronger guard and was put off, it is a new script and
+  a new page.
+- **`open.mjs` stops when a remote page is public.** It asks the site for
+  the page with no login, and a site that answers is open to everyone.
+  `public: true` in the config says that is meant. The older decision that a
+  script cannot check a deploy still holds, this is the one thing it can
+  tell. It would have missed the Vercel accident, which was a second
+  address.
+- **Every page has a content security policy.** The user proposed a service
+  worker as a firewall that blocks unexpected requests and looks for the
+  token in them. Dropped: it does not see sockets or a tab that moves to
+  another address, code in the page can remove it and a token can be
+  encoded. The policy is the same idea done by the browser. It does not make
+  esm.sh trustworthy, see "Trust" in the design. Checked in Chromium, Firefox
+  and WebKit: a diff from git, a code card, a diagram, an image, a
+  screenshot comment and both ways of sending the answer.
+- **esm.sh stays for the first release.** Shipping React, json-render and
+  zod in the skill would be 588KB per page where the viewer is 80KB, and it
+  would not cover the diff view, 11MB with its grammars, which is what the
+  pages with source code load. See "Later, not designed" in the design.
+- **Four tones named by their hue**: `--blue`, `--green`, `--orange` and
+  `--violet`, with a `tone` on the nodes of a diagram and on a `Card`. The user asked for
+  standard colours to tell things apart and thought of semantic names. The
+  four colours the theme had each mean a state, and a red node reads as
+  broken. A tone means something else on every page, so its honest name is
+  its hue.
+- **Setup tells the user about the stronger trigger**, once per project. A
+  README is read once or never.
+- **A toned node is filled with the full colour.** A soft fill with a line
+  was the first version and the user called it sad, then still too weak. The
+  text on the fill is a dark shade of the same hue, plain near-black did not
+  look good. A card keeps a soft fill and a line, it holds text and inputs.
+  The hues were made brighter on the way.
+- **Tones are for wherever groups need telling apart**, not for diagrams
+  only. The user said so after seeing them, so `Card` takes a tone too and a
+  project component uses the variables.
+- **The title of a node is bold and in the heading colour.** That is what
+  the user meant by the titles of a diagram.
+- **The deploy test passed on 2026-10-08.** `create.mjs` stopped a page with
+  code on its way to `remote/`, the Vercel preview answered a request with
+  no login with a redirect to its login, so `open.mjs` went on, and the
+  production address had no such page. Both previews were removed after.

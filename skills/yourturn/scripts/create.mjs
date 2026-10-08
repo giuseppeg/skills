@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Writes a spec to disk as an artifact that open.mjs can show.
 //
-//   cat spec.json | node create.mjs [--target local|remote]
+//   cat spec.json | node create.mjs [--target local|remote] [--code-ok]
 //   # prints {"id":"...","path":"...","target":"...","confirm"?:true}
 //
 // Stdin is { id?, title, spec }. The spec is a Page with Section children, see
@@ -12,19 +12,22 @@
 // .agents/artifacts/remote/<id>/ under the project root, which is the git top
 // level, or the current directory outside a repo. The target comes from
 // config.json unless the option says otherwise. remote/ is the only folder a
-// deploy uploads, so a page in local/ never leaves the machine. "confirm" is
-// printed for a page that holds source code from git: ask the user before it
-// is deployed.
+// deploy uploads, so a page in local/ never leaves the machine. A page that
+// holds source code from git is only written to remote/ with --code-ok, which
+// says the user was asked. In local/ it prints "confirm": ask the user before
+// it is ever moved to remote/.
 //
 // The folder is a static site of its own: the spec in entry.json, a copy of
 // the viewer and of the project's components in _core/, and index.html with
-// the import map the libraries load through. Files the page shows go into the
-// assets/ folder next to entry.json.
+// the import map the libraries load through and a content security policy
+// that lets the page talk to the hosts of that map and to nobody else. Files
+// the page shows go into the assets/ folder next to entry.json.
 //
 // Exit codes: 0 written, 1 bad input (see stderr).
 
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -45,10 +48,10 @@ const inputSchema = z.object({
   })
 });
 
-const usage = "usage: node create.mjs [--target local|remote] < spec.json";
+const usage = "usage: node create.mjs [--target local|remote] [--code-ok] < spec.json";
 let args;
 try {
-  args = parseArgs({ options: { target: { type: "string" } } });
+  args = parseArgs({ options: { target: { type: "string" }, "code-ok": { type: "boolean" } } });
 } catch (err) {
   fail(`${err.message}\n${usage}`);
 }
@@ -160,12 +163,24 @@ for (const [id, el] of Object.entries(spec.elements)) {
 }
 if (problems.length) fail(`invalid spec:\n${problems.map((p) => `- ${p}`).join("\n")}`);
 
+// A page with a diff read from git holds whole source files, and remote/ is
+// what a deploy uploads. So this stops here until the user was asked, unless
+// they said not to be asked again.
+const code = Object.values(spec.elements).some((el) => el.type === "Diff" && el.props.source);
+const confirm = code && local.confirmCode !== false;
+if (confirm && target === "remote" && !args.values["code-ok"]) {
+  fail(
+    "this page holds source code from this repo and a page in remote/ is deployed. Nothing was written. " +
+      'Ask the user first: "This page holds source code from this repo. Deploying uploads it to <address>. ' +
+      'Deploy it, or keep it local?" Then run this again with --code-ok when they said to deploy it, or with ' +
+      "--target local when they keep it local. Never add --code-ok on your own."
+  );
+}
+
 // Diff cards with a `source` get the full old and new file contents, so the
 // browser can expand context and a replay never reads git.
-let code = false;
 for (const [id, el] of Object.entries(spec.elements)) {
   if (el.type !== "Diff" || !el.props.source) continue;
-  code = true;
   const { source, path, oldPath, contains, comments = [] } = el.props;
   if (path) {
     const { oldContents, newContents } = await collectFileContents({
@@ -240,13 +255,30 @@ if (projectComponents.length) cpSync(componentsPath, join(path, "_core", "compon
 function inline(value) {
   return JSON.stringify(value).replaceAll("<", "\\u003c");
 }
+// The page may load code from the hosts of the import map and from its own
+// folder, and send a form to the agent on loopback. Nothing else: a library
+// that turns bad cannot hand the page to another host. The import map is an
+// inline script, so the policy names it by its hash. The diff view compiles
+// wasm and the libraries put styles into the page.
+const importMap = inline({ imports });
+const hosts = [...new Set(Object.values(imports).filter((address) => /^https?:/.test(address)).map((address) => new URL(address).origin))].join(" ");
+const policy = [
+  "default-src 'none'",
+  `script-src 'self' 'wasm-unsafe-eval' 'sha256-${createHash("sha256").update(importMap).digest("base64")}' ${hosts}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  `connect-src 'self' ${hosts}`,
+  "worker-src 'self' blob:",
+  "form-action http://127.0.0.1:*",
+  "base-uri 'none'"
+].join("; ");
 writeFileSync(
   join(path, "index.html"),
   template
-    .replace(/(<script type="importmap">)[^]*?(<\/script>)/, (_, open, close) => open + inline({ imports }) + close)
+    .replace(/(<meta http-equiv="Content-Security-Policy" content=")[^"]*/, (_, open) => open + policy)
+    .replace(/(<script type="importmap">)[^]*?(<\/script>)/, (_, open, close) => open + importMap + close)
     .replace(/(<script type="application\/json" id="components">)[^]*?(<\/script>)/, (_, open, close) => open + inline(projectComponents) + close)
 );
-// A page with a diff read from git holds whole source files. The agent asks
-// before such a page is deployed, unless this user said not to ask again.
-const confirm = code && local.confirmCode !== false;
-process.stdout.write(JSON.stringify({ id, path, target, ...(confirm ? { confirm } : {}) }) + "\n");
+// In local/ the page still says that it holds code, for the day it is moved.
+process.stdout.write(JSON.stringify({ id, path, target, ...(confirm && target === "local" ? { confirm } : {}) }) + "\n");
