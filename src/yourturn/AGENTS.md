@@ -11,7 +11,8 @@ tested and why things are the way they are is in
 
 `skills/yourturn/` is what an install copies, so it holds only what runs:
 `SKILL.md`, `references/`, `scripts/`, `examples/` and the built `dist/`, plus
-a `README.md` for people. The source of the viewer, the build config and all
+a `README.md` for people and a copy of the root `LICENSE`. Keep the two
+license files the same. The source of the viewer, the build config and all
 tests are in `src/yourturn/`, which never ships. Nothing in the skill folder
 may point at `src/`.
 

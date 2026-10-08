@@ -55,9 +55,10 @@ choice replaced, that daemon is what it compares with.
 - The skill folder holds only what runs: `SKILL.md`, the references, the
   scripts, an example and the built viewer. An install copies that folder, and
   an agent that finds source and a `package.json` there may try to build it.
-  The source, the build config and the tests are in `src/yourturn/`. The one
-  thing in the folder that does not run is a `README.md` for people, which
-  GitHub shows to whoever opens the folder.
+  The source, the build config and the tests are in `src/yourturn/`. What
+  does not run in the folder is a `README.md` for people, which GitHub shows
+  to whoever opens the folder, and a copy of the `LICENSE`, so the notice
+  travels with an install.
 - The repo holds all of the author's skills, `giuseppeg/skills`, and yourturn
   is one folder under `skills/`. Chosen on 2026-10-08.
 - The scripts stay in Node with no dependencies to install, minimum Node 20. No

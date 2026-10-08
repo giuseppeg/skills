@@ -409,3 +409,5 @@ A fresh agent that read only the skill folder wrote a chart component around
   code on its way to `remote/`, the Vercel preview answered a request with
   no login with a redirect to its login, so `open.mjs` went on, and the
   production address had no such page. Both previews were removed after.
+- **The skill folder has its own copy of the `LICENSE`.** An install copies
+  only that folder, and the MIT notice should travel with every copy.
