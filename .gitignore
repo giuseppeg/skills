@@ -1,0 +1,17 @@
+# Dependencies (dev-only; the skill runs from the prebuilt bundle)
+node_modules/
+
+# Build caches and logs
+.vite/
+*.log
+npm-debug.log*
+
+# macOS
+.DS_Store
+
+# This repo's own yourturn pages, answers and setup. They stay on the machine.
+.agents/artifacts/
+
+# IMPORTANT: skills/yourturn/dist/ is intentionally committed.
+# It is the prebuilt, zero-install bundle the skill serves at runtime.
+# Do not add it here.

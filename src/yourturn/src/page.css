@@ -1,0 +1,360 @@
+.page {
+  counter-reset: section;
+  line-height: 1.75;
+}
+
+/* Leave room below the submit button so the fixed player never covers it. */
+#root:has(.page) {
+  padding-bottom: 140px;
+}
+
+.page-content {
+  color: var(--text);
+  max-width: 680px;
+}
+
+.page p {
+  margin: 0 0 0.9em;
+}
+
+.page-section > h2 {
+  counter-increment: section;
+  margin: 2.6em 0 0.6em;
+  color: var(--fg);
+  font-size: 1.55em;
+  line-height: 1.3;
+  font-weight: 500;
+  scroll-margin-top: 24px;
+}
+
+.page-section > h2::before {
+  content: counter(section, decimal-leading-zero);
+  display: block;
+  margin-bottom: 0.3em;
+  color: var(--muted);
+  font-size: 0.6em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+/* Blocks that are not plain text: inputs, cards, diagrams, layouts. */
+.page-section > :not(h2, p) {
+  margin-bottom: 1.2em;
+}
+
+.page-section .heading {
+  margin: 1.4em 0 0.5em;
+  font-size: 1.15em;
+}
+
+.page-overview {
+  margin-bottom: 1.5em;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  corner-shape: squircle;
+  background: var(--card);
+  color: var(--fg);
+}
+
+.page-overview p {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.page-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page mark {
+  background: none;
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.page-ref {
+  margin: 0 0 1.2em;
+  scroll-margin-top: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  corner-shape: squircle;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* A card that is still loading: its file name over a few grey lines. Only the
+   opacity moves, so it keeps going while the highlighter holds the page. */
+.page-ref-loading {
+  padding: 10px 16px 16px;
+  background: var(--card);
+  color: var(--muted);
+}
+
+.page-ref-loading::after {
+  content: "";
+  display: block;
+  height: 82px;
+  margin-top: 14px;
+  background: repeating-linear-gradient(var(--border) 0 10px, transparent 10px 24px);
+  animation: page-ref-loading 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes page-ref-loading {
+  to {
+    opacity: 0.35;
+  }
+}
+
+.page-ref[data-ready] .page-ref-loading {
+  display: none;
+}
+
+.page-ref.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.page-card-comment {
+  font-family: var(--font-sans);
+  display: grid;
+  padding: 10px 16px;
+  background: var(--card);
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+}
+
+.page-card-comment-lines {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.page-card-comment-lines strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.page-card-comment p {
+  grid-column: 1;
+}
+
+.page-card-comment .feedback-delete {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin: 0;
+}
+
+.page-comment {
+  display: block;
+  margin-top: 2.6em;
+}
+
+.page-comment span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fg);
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.page-submit {
+  width: 100%;
+  margin-top: 1.2em;
+}
+
+.page-hint {
+  margin: 0.8em 0 0;
+  color: var(--muted);
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.page-image {
+  margin: 0;
+}
+
+.page-image img {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  corner-shape: squircle;
+}
+
+.page-image figcaption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+/* A block that failed to render. */
+.block-error {
+  padding: 12px 16px;
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  corner-shape: squircle;
+  color: var(--error);
+  font-size: 14px;
+}
+
+/* Wide screens: main column stays centered, outline sits in the right gutter. */
+@media (min-width: 1240px) {
+  #root:has(.page) {
+    max-width: 1200px;
+  }
+
+  .page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 680px minmax(0, 1fr);
+    column-gap: 40px;
+  }
+
+  .page-content {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .outline {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+/* A wide page: the cards take the room, text stays at its reading width. */
+#root:has(.page-wide) {
+  max-width: 1680px;
+}
+
+.page-wide .page-content {
+  max-width: none;
+}
+
+.page-wide .page-content > :not(.page-section),
+.page-wide .page-section > :not(.page-ref, .page-files),
+.page-wide .page-files > :not(.page-ref) {
+  max-width: 680px;
+}
+
+@media (min-width: 1240px) {
+  .page-wide {
+    grid-template-columns: minmax(0, 1fr) 220px;
+  }
+
+  .page-wide .page-content {
+    grid-column: 1;
+  }
+
+  .page-wide .outline {
+    grid-column: 2;
+  }
+}
+
+/* The input the player stopped on. */
+.field.active {
+  border-radius: var(--radius);
+  corner-shape: squircle;
+  outline: 3px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  outline-offset: 8px;
+}
+
+.page-sentence {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.page-sentence:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.page-sentence.active {
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.page-player {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.31em;
+  padding: 0.46em 0.77em;
+  border: 0.08em solid var(--border);
+  border-radius: 50em;
+  background: transparent;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0.31em 1.38em rgb(0 0 0 / 0.18);
+  font-size: 13px;
+}
+
+.page-player button {
+  width: 2.46em;
+  height: 2.46em;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.page-player button svg {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.page-player button:hover {
+  background: color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
+/* The hint on a Mac with no natural voice: a label in the player that opens
+   the steps above it. */
+.page-voice summary {
+  padding: 0 0.6em;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.page-voice summary::-webkit-details-marker {
+  display: none;
+}
+
+.page-voice summary:hover,
+.page-voice[open] summary {
+  color: var(--fg);
+}
+
+.page-voice-steps {
+  position: absolute;
+  bottom: calc(100% + 0.8em);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(27em, 90vw);
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  corner-shape: squircle;
+  background: var(--card);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.page-voice-steps ol {
+  margin: 0;
+  padding-left: 1.4em;
+}

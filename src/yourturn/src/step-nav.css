@@ -1,0 +1,112 @@
+.step-nav {
+  --step-surface: color-mix(in srgb, var(--card) 88%, var(--fg));
+  --step-muted-surface: color-mix(in srgb, var(--card) 96%, var(--fg));
+  --step-line: color-mix(in srgb, var(--fg) 24%, var(--border));
+  color: var(--muted);
+}
+
+.step-nav-list {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step-nav-horizontal .step-nav-list {
+  align-items: stretch;
+}
+
+.step-nav-vertical .step-nav-list {
+  flex-direction: column;
+}
+
+.step-nav-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+.step-nav-horizontal .step-nav-item {
+  flex: 1;
+}
+
+.step-nav-vertical .step-nav-item + .step-nav-item::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  width: 1px;
+  height: 10px;
+  background: var(--step-line);
+}
+
+.step-nav-index {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--step-muted-surface);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.step-nav-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  corner-shape: squircle;
+  background: transparent;
+}
+
+.step-nav-title {
+  display: block;
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.step-nav-detail {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.step-nav-item.is-current .step-nav-index,
+.step-nav-item.is-complete .step-nav-index {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.step-nav-item.is-current .step-nav-copy {
+  background: var(--step-surface);
+}
+
+.step-nav-item.is-upcoming .step-nav-index {
+  border-color: var(--border);
+  background: transparent;
+  color: color-mix(in srgb, var(--fg) 46%, var(--muted));
+}
+
+.step-nav-item.is-upcoming .step-nav-title {
+  color: color-mix(in srgb, var(--fg) 58%, var(--muted));
+}
+
+.step-nav-item.is-upcoming .step-nav-detail {
+  color: color-mix(in srgb, var(--muted) 76%, var(--fg));
+}
+
+@media (max-width: 560px) {
+  .step-nav-horizontal .step-nav-list {
+    flex-direction: column;
+  }
+
+}
