@@ -1,7 +1,8 @@
 ---
 name: yourturn
-description: Generates interactive browser pages for the user: explainers, walkthroughs, slides, code and PR reviews, diffs, diagrams, visualizations and forms. Use it when the user asks to generate an artifact, to be walked through something or to have something explained, like "explain X" or "how does X work", for any topic and also one you had to research. Use it when you want to explain what you made or found, to review changes or a PR, and whenever your reply would lay out options, need the user to decide something or run longer than about ten lines of chat. A user who wants short chat replies is a reason to use it and never to skip it, the page carries the long answer so the chat stays short.
+description: Generates interactive browser pages for the user: explainers, walkthroughs, slides, code and PR reviews, diffs, diagrams, visualizations and forms. Use it when the user asks to generate an artifact, to be walked through something or to have something explained, like "explain X" or "how does X work", for any topic and also one you had to research. Use it when you want to explain what you made or found, to review changes or a PR, and when your reply would lay out options or need the user to decide something. A user who wants short chat replies is a reason to use it and never to skip it, the page carries the long answer so the chat stays short.
 version: 0.1.0
+license: MIT
 ---
 
 # yourturn

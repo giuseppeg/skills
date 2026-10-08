@@ -1,0 +1,25 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  yourturn:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/yourturn
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # The lowest version the scripts support.
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      # dist/ is committed and is what an install runs. A build that changes
+      # it means the source was edited and dist/ was not rebuilt.
+      - run: git diff --exit-code -- ../../skills/yourturn/dist
+      - run: npm test

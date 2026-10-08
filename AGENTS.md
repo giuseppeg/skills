@@ -7,4 +7,4 @@ file before you work on the skill. Nothing in a skill folder may point at
 `src/`.
 
 - yourturn: `skills/yourturn/`, source and notes in `src/yourturn/`, design
-  and plan in `src/yourturn/docs/`.
+  and notes in `src/yourturn/docs/`.

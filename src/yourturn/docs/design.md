@@ -3,7 +3,8 @@
 ## Status
 
 Everything here is built, except "Later, not designed", which is a list of
-ideas. How it was built, step by step, is in `plan.md` next to this file.
+ideas. The decisions behind it, with their dates and what was turned down,
+are in `notes.md` next to this file.
 
 The three browser assumptions this design rests on were tested on 2026-10-06.
 They held, with caveats listed in "What was verified".
@@ -737,6 +738,26 @@ Caveats:
 - Safari 18.2 or later with its "not secure connection" warning turned on
   blocked navigations to `http://localhost`. WebKit fixed this in June 2026.
   It affects the local target too.
+
+## Where the code is
+
+The scripts are in `skills/yourturn/scripts/`. `src/` and `public/` are in
+`src/yourturn/`.
+
+| File | What is in it |
+|---|---|
+| `scripts/create.mjs` | Reads `{ id?, title, spec }` from stdin, checks the structure, the spec rules, the props of every built-in element and the rules of a `Diff`, resolves `source` on `Diff` elements: one file with a `path`, the whole change without. Writes into `local/` or `remote/` by `target` in the config or `--target`, prints `confirm` for a page with a diff from git unless `config.local.json` has `confirmCode: false`. Reads `imports` from `config.json` and the names in the components folder. Writes `entry.json`, copies `dist/_core/` and the components, writes `index.html` from the template. |
+| `scripts/open.mjs` | Opens one artifact, waits, writes the answer file, prints the result line. Adds `notices` to that line: the weekly check of `SKILL.md` on `main` and the donation note, with their times in `config.local.json`. Finds the artifact in `local/` or `remote/`, and that folder is the target. Reads `url` from `config.json` or `--url`. `--target local` serves a remote artifact from the machine. Listens on any free port. It is the one-shot loopback server itself: `Host` check, static serving of `index.html`, `entry.json`, `_core/` and `assets/` of the artifact folder, or nothing for a remote target, `/answer` with the token and the "Sent" page as its reply, the timeout and the browser open helper. |
+| `scripts/git-collect.mjs` | Git collection. `collectDiff` gives the patches of a change, `collectChange` adds the full old and new contents of each text file, `collectFileContents` does that for one file and applies `contains`. |
+| `scripts/select-changes.mjs`, `changes.mjs` | The `contains` filter and the script that lists changes. `changes.mjs` takes `diffSourceSchema` from `dist/catalog.mjs`. |
+| `public/index.html` | The page template: the pinned import map, the empty component list, the links to `_core/`. Copied to `dist/` by the build. |
+| `src/main.tsx` | App entry, built as `_core/boot.js`. Boots at module top level: session from the fragment, `./entry.json` asked for fresh, the draft store in `sessionStorage` under the page path and `createdAt`. Then submit: `fetch` on the agent's own origin, a form POST from anywhere else, "Copy response" with no session, also after a send that got no answer or a `403`. |
+| `src/catalog.ts` | The zod catalog. Also exports `z`, `diffSourceSchema`, `validateSpec` and `resolveElementProps` for the scripts, bundled into `dist/catalog.mjs` by `npm run build`. Nullable props are also optional. |
+| `src/components.tsx` | The registry. `Diff` renders one card, or one per file of a whole change inside `.page-files`. At the end: `same` and the wrap that keeps the props of a block until their content changes, `BlockBoundary`, the `renderErrors` list, the loading of the project's components with their prop check, and the wrap of every component. |
+| `src/page.tsx` | `Prose`, `CodeCard` (the wrapper of `Code` and `Diff` with the card number) and `Page`, the shell: the player, the outline with the files of a whole change, the comment box and the submit button. Built as `_core/yourturn.js`, so its exports are what a project component can import from `yourturn`. |
+| `src/ref-card.tsx` | The lazy chunk behind `CodeCard`: code and diff views with line comments. Its options and notes are memoized, the diff view starts over when it gets new objects. |
+| `src/feedback-overlay.tsx` | Images, element screenshots, text comments, and the list that also shows the line comments. Attachment cap 3.5MB at line 8. |
+| `src/step-nav.tsx` | The step lists. Their text goes through `Prose`, so it is read aloud. |
 
 ## Later, not designed
 

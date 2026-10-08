@@ -1,11 +1,20 @@
 # yourturn
 
-An agent skill that renders an on-the-fly UI so a person can complete a step
-mid-task, then hands the answer back to the agent. The agent writes a
-[json-render](https://json-render.dev/) spec, the user fills the form in their
-browser and submits, and the result comes back as JSON. Each page is saved as
-an artifact folder under `.agents/artifacts/` in the project, so it can be
-opened again later.
+An agent skill that answers with a page instead of a wall of chat. The agent
+writes the page, your browser opens it, you read and answer on it, and what
+you said goes back to the agent.
+
+- **Explanations.** How something works or what the agent just changed, in
+  short sections with the real code and diffs inline. A page can be read
+  aloud.
+- **Code reviews.** A guided review: the big picture, the places that need
+  your eye and the agent's comments on the lines. You comment on any line.
+- **Decisions and forms.** Options laid out with a choice on each, or several
+  fields at once.
+
+You can comment on any sentence, attach an image or point at an element of
+the page. Every page is saved as a folder under `.agents/artifacts/` in your
+project, so it can be opened again later.
 
 ## Install
 
@@ -15,23 +24,14 @@ Installed with the [skills](https://www.skills.sh/docs) CLI:
 npx skills add giuseppeg/skills --skill yourturn
 ```
 
-This makes the `yourturn` skill available to your AI agent. No build or extra
-setup is needed, the UI ships prebuilt.
+It needs Node 20 or newer. No build or extra setup is needed, the viewer
+ships prebuilt.
 
 ## When it triggers
 
-The skill is meant to be used by an agent (or another skill) when it needs
-richer input from the user than a short chat reply, for example:
-
-- collecting several fields or choices at once (a form)
-- letting the user pick, fill or review values in a real UI
-- any step where a yes/no/ok answer in chat is not enough
-
-When triggered, the agent writes a UI spec to disk and starts a small local
-server, the user's browser opens the page in a new tab, they submit, and the
-agent resumes with their answers.
-
-It is not used for simple confirmations, those stay in chat.
+The agent uses it when you ask to have something explained or walked through,
+when you ask for a review, and when its reply would lay out options or need a
+decision from you. A simple yes or no stays in chat.
 
 ### Make it trigger more
 
@@ -51,6 +51,25 @@ spec   agent ──stdin──► create.mjs ──► .agents/artifacts/local/<
 page   agent ──► open.mjs <id> ──► browser tab
 answer browser tab ──HTTP──► open.mjs ──stdout──► agent
 ```
+
+Pages stay on your machine. A project can also set up a static site of its
+own, so a page gets an address that can be shared. A review page holds whole
+source files, so that site needs a login in front of it.
+
+## Good to know
+
+- **A page loads its libraries from a CDN.** React and the diff view come
+  from [esm.sh](https://esm.sh), so the first load needs the network. It also
+  means that CDN runs code in the page: it could read the page and send an
+  answer in your name. A project can point those imports at its own files
+  with `imports` in `.agents/artifacts/config.json`.
+- **One network call a week.** The skill fetches its own `SKILL.md` from
+  GitHub to see whether a newer version is out. It sends nothing about your
+  project.
+- **A donation note.** After a week of use and then every two months, the
+  agent shows one line with a link.
+
+`"notices": false` in `.agents/artifacts/config.json` turns the last two off.
 
 See [`SKILL.md`](SKILL.md) for the workflow and
 [`references/authoring.md`](references/authoring.md) for the spec format and

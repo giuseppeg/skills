@@ -2,9 +2,10 @@
 
 Agent skill that renders an on-the-fly browser UI to collect input mid-task,
 then returns the answer to the agent. The UI is a json-render spec, saved as an
-artifact folder under `.agents/artifacts/` in the user's project. The design is
-in `src/yourturn/docs/design.md` and the work plan with its status is in
-`src/yourturn/docs/plan.md`.
+artifact folder under `.agents/artifacts/` in the user's project. How it
+works is in `src/yourturn/docs/design.md`. What is open, what was already
+tested and why things are the way they are is in
+`src/yourturn/docs/notes.md`.
 
 ## Layout
 
@@ -41,6 +42,21 @@ node skills/yourturn/scripts/open.mjs <id> --url <site>    # opens the deployed 
 
 Result prints to stdout. Add `--no-open` for headless. `npm test` in
 `src/yourturn` runs the script tests.
+
+## Working rules
+
+- `design.md` is the source of truth. If it is wrong or stale, fix it and
+  tell the user. A decision goes at the end of the log in `notes.md`, with
+  its reason and what was turned down.
+- Change `SKILL.md` and `references/` in the same change that changes
+  behavior. An installed skill can be a symlink to this checkout, and then
+  the working tree is live.
+- Run `npm test` in `src/yourturn`. The test file of a new script goes in
+  `test/` and into the `test` line of `package.json`.
+- Check the result in a real browser before calling a change done.
+- When a reply lays out options or needs a decision, make it a yourturn page
+  with the scripts of this repo and keep the chat message to a line or two.
+- Commit only when the user asks.
 
 ## Conventions
 

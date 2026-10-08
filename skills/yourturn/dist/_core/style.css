@@ -1055,6 +1055,7 @@ diffs-container {
 
 .diagram-title {
   margin: 0;
+  color: var(--fg);
   font-size: 15px;
   font-weight: 650;
 }
