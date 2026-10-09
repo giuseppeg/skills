@@ -431,3 +431,7 @@ A fresh agent that read only the skill folder wrote a chart component around
   only the prose in `SKILL.md` made setup happen, and that prose is now one
   step of the workflow. The user chose the stop over the step alone.
   `open.mjs` does not check, a page it opens was made by `create.mjs`.
+- **A live `open.mjs` session stays part of the active turn until it returns.**
+  A submitted answer is also saved under `answers/<id>/`, so a later turn can
+  recover it if the original turn ended early. This cannot wake a finished turn;
+  automatic resume needs support from the agent platform.

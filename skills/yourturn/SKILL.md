@@ -157,13 +157,22 @@ asks for exactly that, see "Raw diff review" in `references/review.md`.
    they did, put `"public": true` into the config and run `open.mjs` again.
 
    The wait can take up to an hour, longer than most command timeouts. If your
-   harness tells you when a background command exits, run `open.mjs` in the
-   background and read its output when it exits. Otherwise run it in the
-   foreground with the longest timeout you can set, and if the terminal tool
-   still returns a live session id, keep polling it. Do not send a final
-   response or ask the user to report back; stdout is the result channel. Pass
-   `--no-open` in headless contexts to print the URL instead of launching a
-   browser.
+   harness signals when a background command exits, run `open.mjs` that way and
+   read its output on exit. Otherwise run it with the longest wait available.
+   If the tool returns a live session id, keep polling that **same session**
+   until it exits and returns the submitted JSON (or a timeout/error). The URL
+   and a running session are not a completed task: keep this turn active and do
+   not reply to the user while the session is still waiting. Do not use a
+   short-yield call and then finish the turn, leave the session unobserved, or
+   ask the user to report back. The returned stdout is the result channel;
+   inspect and handle it before replying. Pass `--no-open` in headless contexts
+   to print the URL instead of launching a browser.
+
+   If a turn ends before the answer reaches you, the browser submission is still
+   saved to `.agents/artifacts/answers/<id>/`. When the task resumes in a later
+   turn or session, read the newest answer file for that artifact before
+   reopening the page or asking the user to submit again. The saved JSON is the
+   recovery path; it does not wake a finished turn or send a message by itself.
 
    In chat, say in a line or two what the page is for and give its id. Do
    not repeat in chat what the page says, the page is the message.
