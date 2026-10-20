@@ -14,7 +14,7 @@ A code or PR review has rules of its own, see `review.md`.
   "title": "What changed in auth",
   "spec": {
     "root": "page",
-    "state": { "merge": "yes" },
+    "state": { "merge": "" },
     "elements": {
       "page": {
         "type": "Page",
@@ -32,11 +32,12 @@ A code or PR review has rules of its own, see `review.md`.
         "type": "Diff",
         "props": { "path": "src/auth.ts", "note": "The middleware shrinks to one call.", "source": { "mode": "dirty-tree" } }
       },
-      "decide": { "type": "Section", "props": { "heading": "One thing to decide" }, "children": ["t3", "q1"] },
-      "t3": { "type": "Text", "props": { "text": "Old tokens stop working after this." } },
+      "decide": { "type": "Section", "props": { "heading": "One thing to decide" }, "children": ["t3", "t4", "q1"] },
+      "t3": { "type": "Text", "props": { "text": "The new check needs a field that older tokens lack. So it rejects them, and everyone logged in now gets logged out once." } },
+      "t4": { "type": "Text", "props": { "text": "A **migration** can add that field to old tokens first. It takes about a day. I would wait, because a surprise logout looks like a bug to users." } },
       "q1": {
         "type": "RadioGroup",
-        "props": { "label": "Ship it now?", "options": ["yes", "after the migration"], "value": { "$bindState": "/merge" } }
+        "props": { "label": "When should it ship?", "options": [{ "label": "Now, everyone logs in again once", "value": "now" }, { "label": "After the migration, a day later (my pick)", "value": "later" }], "value": { "$bindState": "/merge" } }
       }
     }
   }
@@ -50,7 +51,8 @@ optional `state` object with seed values.
 Rules, checked by `create.mjs`:
 
 - The root element is a `Page` with `{ overview, width }`. `overview` is the
-  big picture in 1 to 3 sentences, or leave it out. `width` is `"base"` or
+  big picture in 1 to 3 sentences. Leave it out only on a page with nothing
+  to explain, like a raw diff. `width` is `"base"` or
   `"wide"`, default `"base"`. On a wide page the `Code` and `Diff` cards take
   the width of the window and the text keeps its reading width. Use it when
   the code is the point, like a raw diff review.
@@ -65,7 +67,7 @@ Rules, checked by `create.mjs`:
 
 Put an input where its question comes up, right after the text that explains
 it. Bind its value to a JSON Pointer path with `{ "$bindState": "/path" }` and
-seed your recommended answer in `spec.state` under the same path. The result is
+seed it in `spec.state` under the same path, see "Inputs". The result is
 the full state model, so plan your paths (e.g. `/form/email`).
 
 ## What the page adds itself
@@ -237,6 +239,16 @@ All inputs take `label` and an optional `help` string. Bind the value prop with
 
 `options` is an array of either bare strings (`["A", "B"]`) or
 `{ "label": "...", "value": "..." }` objects.
+
+Never pre-pick a choice. A picked option comes back looking like the user's
+decision, even when they only had questions.
+
+- Seed a `RadioGroup` or `Select` with `""`, so nothing is picked.
+- Mark the option you recommend in its label and keep its value plain, like
+  `{ "label": "After the migration (my pick)", "value": "later" }`.
+- Use a `Checkbox` only when unticked is a real answer, like a setting, and
+  seed it with `false`. A decision like "fix this or not" is a `RadioGroup`.
+- `required` only adds a star. The page still sends an empty answer.
 
 There is no password field. Answers are saved to disk and a page may be
 deployed, so never ask for a secret on a page.

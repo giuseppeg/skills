@@ -213,7 +213,7 @@ So a section and each of its blocks is a real element of the spec.
   "title": "What changed in auth",
   "spec": {
     "root": "page",
-    "state": { "merge": "yes" },
+    "state": { "merge": "" },
     "elements": {
       "page": {
         "type": "Page",
@@ -227,18 +227,20 @@ So a section and each of its blocks is a real element of the spec.
         "props": { "path": "src/auth.ts", "note": "The middleware shrinks to one call.", "source": { "mode": "dirty-tree" } }
       },
       "risk": { "type": "Section", "props": { "heading": "One thing to decide" }, "children": ["t2", "q1"] },
-      "t2": { "type": "Text", "props": { "text": "Old tokens stop working after this." } },
+      "t2": { "type": "Text", "props": { "text": "Old tokens lack a field the new check needs, so everyone logged in gets logged out once. A migration can add the field first, in about a day." } },
       "q1": {
         "type": "RadioGroup",
-        "props": { "label": "Ship it now?", "options": ["yes", "after the migration"], "value": { "$bindState": "/merge" } }
+        "props": { "label": "When should it ship?", "options": [{ "label": "Now, everyone logs in again once", "value": "now" }, { "label": "After the migration, a day later (my pick)", "value": "later" }], "value": { "$bindState": "/merge" } }
       }
     }
   }
 }
 ```
 
-Inputs sit where the question comes up. The agent's recommended answer is the
-seed value in `state`.
+Inputs sit where the question comes up. No choice is pre-picked: a
+`RadioGroup` or `Select` is seeded with `""` and the agent's recommendation
+is marked in the label of its option. An empty choice in the result is
+undecided.
 
 A prop the catalog marks as nullable can also be left out, so a spec only
 names the props it uses.

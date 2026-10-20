@@ -71,14 +71,15 @@ back for the end.
      gives the fix when you know it. Start a doubt with "Question:". Line
      numbers are new-file lines, check them against the file.
    - For a problem, the input for its decision right after the card: a
-     `Checkbox` like "Fix this", checked when you recommend it, or a
-     `RadioGroup` when there is more than one way. For code you should not
+     `RadioGroup` with "Fix it" and "Leave it", or one option per way to fix
+     it plus "Leave it". Nothing is picked and your recommendation is marked
+     in its label, see "Inputs" in `authoring.md`. For code you should not
      change, like someone else's PR, ask whether to pass the finding on.
 
    When a section depends on a later one, say so in one sentence.
 4. Last section, only when needed, "Smaller things": what belongs to no
    line, like a test that is missing, and the nits, one sentence each. One
-   `Checkbox` asks whether to fix the nits. No cards here.
+   `RadioGroup` asks whether to fix the nits. No cards here.
 
 Comments are not read aloud, which is one more reason the `Text` says the
 problem. Skip `comments` on cards with nothing to flag. The page adds the

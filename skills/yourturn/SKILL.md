@@ -28,16 +28,28 @@ Do not use it for a simple yes/no/ok confirmation. Ask in chat instead.
 
 These apply to every page: explainers, walkthroughs, slides, forms etc.
 
-- Assume the user has no context!
-- Start with the big picture: what this is and why it matters, before detail.
+Users often let agents code and co-design, so they may lack the big
+picture. Write for a smart reader who was not there, and keep it concise.
+
+- Open with a short big picture, so the user can tell what the page is
+  about, where it sits in the system and why it matters.
+- Name nothing the reader has not met. Say in plain words what a file,
+  function, term or earlier decision is the first time it comes up.
+- Make each consequence concrete. Say who is hit and what they would see,
+  like "everyone logged in gets logged out once" rather than "old tokens
+  stop working".
 - One idea per section. Headings say the point ("Auth now lives in one
   function"), not the topic ("Auth").
-- Short paragraphs of 2 to 4 sentences. Plain words. No jargon unless defined.
+- Short paragraphs of 2 to 4 short sentences. Plain words. No jargon unless
+  defined. Short is not dense, so never compress a point until it is hard to
+  follow.
 - Say why, not what: the constraint, the tradeoff, what would break without it.
 - Pick the few most important things and skip the rest. Guide the reader to
   the spots that need attention.
 - Highlight 1 to 3 keywords per paragraph at most.
-- End with the conclusion or the decision needed.
+- End with the conclusion or the decision needed. Before a decision give
+  each option in plain words, what it costs and which one you recommend and
+  why.
 
 ## What to read
 
@@ -213,6 +225,12 @@ your reply would take more than a few lines, or needs them to decide
 something, answer with a **follow-up page** and not with a long chat message.
 On a page the user comments on the exact sentence and ticks an answer. In
 chat they have to quote you.
+
+A choice the user left at `""` is undecided, never a no. A question or a
+doubt about a section also leaves its choice open even when an option is
+picked, whether they wrote it on its text, on a line of code or in the
+comment box. They may need to understand before they decide. Answer it and
+ask again.
 
 - It is a new artifact for each round. Its `overview` names the page it
   follows, by title, and says what is settled and what is still open.

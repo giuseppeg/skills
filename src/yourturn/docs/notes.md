@@ -26,6 +26,8 @@ Worth doing before a release.
 - The voice hint in Safari and Firefox. It was only seen in headless Chrome
   Canary, with Zoe taken out of the voice list by a script.
 - The real Firefox app.
+- The rules of 2026-10-20 in a fresh session: a page with no pre-picked
+  choice, and an agent reading an answer with a question in the comment box.
 
 Seen by the user in a real browser: a review of 29 files, the guided review,
 follow-up pages with step lists, choices on a card and the feedback list, a
@@ -435,3 +437,22 @@ A fresh agent that read only the skill folder wrote a chart component around
   A submitted answer is also saved under `answers/<id>/`, so a later turn can
   recover it if the original turn ended early. This cannot wake a finished turn;
   automatic resume needs support from the agent platform.
+
+### 2026-10-20: plain pages and empty choices
+
+- **No choice is pre-picked.** A seeded recommendation came back as the
+  user's decision even when their comments on that section were questions.
+  Choices are now seeded with `""` and the agent marks its pick in the
+  option's label. The review's "Fix this" checkbox became a `RadioGroup`
+  that always offers "Leave it", since an unticked box cannot tell "no" from
+  "not decided". An empty choice, or a question or doubt about the section
+  anywhere in the answer, leaves it open for a follow-up. Turned down:
+  keeping the seed and only reading the comments, which still hides an
+  unmade choice. Also turned down for now, by the user: a line near the send
+  button saying an empty choice is fine, and a "go with all your picks"
+  option for long reviews. A pick on the page still cannot be undone.
+- **Pages assume the reader was not there.** Users often let agents code and
+  co-design, so they lack the big picture. The writing rules ask for a short
+  big picture first, no unexplained names and concrete consequences, and to
+  stay concise. The example spec lost its implicit gotcha ("Old tokens stop
+  working") and now explains the migration it offers.
