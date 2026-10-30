@@ -1,22 +1,78 @@
-.diagram-flow {
+/* A diagram: a title and one-line caption, the boxes and arrows, then the
+   numbered steps. Flat: no shadows. Every rounded shape is a squircle. */
+.diagram {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin: 0;
+}
+
+.diagram * {
+  corner-shape: squircle;
 }
 
 .diagram-title {
-  margin: 0;
   color: var(--fg);
-  font-size: 15px;
-  font-weight: 650;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
+.diagram-caption {
+  margin: -4px 0 14px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* The frame holds rows of boxes; zones and the SVG with arrows sit behind. */
 .diagram-frame {
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 76px 88px;
-  padding: 4px;
+  display: flex;
+  gap: 72px;
+  padding: 6px 0;
+}
+
+.diagram-frame.down,
+.diagram-frame.stack {
+  flex-direction: column;
+}
+
+.diagram-frame.stack {
+  gap: 10px;
+}
+
+.diagram-frame.right {
+  flex-direction: row;
+  gap: 80px;
+}
+
+/* Zones need room between rows for their own label and the arrow's. */
+.diagram-frame.grouped {
+  padding: 22px 16px 16px;
+}
+
+.diagram-frame.down.grouped {
+  gap: 92px;
+}
+
+.diagram-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+.diagram-frame.grouped .diagram-row {
+  gap: 40px;
+}
+
+.diagram-frame.right .diagram-row {
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .diagram-svg {
@@ -29,81 +85,274 @@
   z-index: 0;
 }
 
-.diagram-svg marker path {
-  fill: color-mix(in srgb, var(--fg) 40%, var(--border));
+/* Tones. Each box, zone and arrow picks its colour from --tone. */
+.diagram .blue { --tone: var(--blue); }
+.diagram .green { --tone: var(--green); }
+.diagram .orange { --tone: var(--orange); }
+.diagram .violet { --tone: var(--violet); }
+
+/* A box: tinted in its tone, no border, an icon in the same tone,
+   then the label and a short detail. A box with no tone is a light grey. */
+.diagram-node {
+  --tone: color-mix(in srgb, var(--fg) 75%, transparent);
+  flex: 0 1 230px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--tone) 7%, transparent);
+  border-radius: var(--radius);
+  text-align: left;
+  transition: opacity 160ms ease;
+  cursor: default;
 }
 
-.diagram-connector {
+.diagram-frame.right .diagram-node {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.diagram-frame.stack .diagram-node {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+}
+
+.diagram-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: color-mix(in srgb, var(--tone) 80%, var(--fg));
+}
+
+.diagram-icon svg {
+  width: 20px;
+  height: 20px;
   fill: none;
-  stroke: color-mix(in srgb, var(--fg) 40%, var(--border));
-  stroke-width: 2.25;
+  stroke: currentColor;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.diagram-connector-label {
+.diagram-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.diagram-label {
+  color: var(--fg);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.diagram-detail {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+/* In a stack, a layer can list what it holds as small chips. */
+.diagram-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-basis: 100%;
+  padding-left: 36px;
+}
+
+.diagram-item {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 18%, var(--card));
+  font-size: 12.5px;
+  color: var(--fg);
+}
+
+/* A group: a tinted, dashed zone with its name on the top edge. */
+.diagram-zone {
+  --tone: var(--muted);
+  position: absolute;
+  z-index: 0;
+  background: color-mix(in srgb, var(--tone) 5%, transparent);
+  border: 1.5px dashed color-mix(in srgb, var(--tone) 45%, transparent);
+  border-radius: calc(var(--radius) + 14px);
+}
+
+.diagram-zone-label {
+  position: absolute;
+  top: 0;
+  padding: 1px 10px;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: var(--bg);
+  color: color-mix(in srgb, var(--tone) 75%, var(--fg));
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: translateY(-50%);
+}
+
+/* Arrows. They take the colour of the box they leave. "maybe" is dashed,
+   "never" is dotted and ends in a red cross. */
+.diagram-arrow {
+  --tone: color-mix(in srgb, var(--fg) 50%, var(--bg));
+  --ink: color-mix(in srgb, var(--tone) 80%, var(--fg));
+  transition: opacity 160ms ease;
+}
+
+.diagram-line,
+.diagram-pulse {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.diagram-head {
+  fill: var(--ink);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.diagram-arrow.maybe .diagram-line {
+  stroke-dasharray: 7 7;
+}
+
+.diagram-arrow.never .diagram-line {
+  stroke: var(--muted);
+  stroke-dasharray: 1 7;
+}
+
+.diagram-arrow.never .diagram-head {
+  fill: none;
+  stroke: var(--error);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+/* A label is a pill on the line. With a step number, the number's centre
+   is the point on the line and the words follow on its right. */
+.diagram-edge-label {
   position: absolute;
   z-index: 2;
-  pointer-events: none;
-  max-width: 96px;
-  padding: 4px 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 160px;
+  padding: 2px 9px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
-  backdrop-filter: blur(10px);
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.25;
-  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.3;
+  white-space: nowrap;
   transform: translate(-50%, -50%);
-  overflow-wrap: anywhere;
+  transition: opacity 160ms ease;
 }
 
-.diagram-node-wrap {
-  position: relative;
-  z-index: 1;
+.diagram-edge-label.numbered {
+  padding-left: 3px;
+  transform: translate(-13px, -50%);
 }
 
-.diagram-node {
-  min-width: 0;
-  padding: 14px 16px;
-  border-radius: var(--radius);
-  corner-shape: squircle;
-  background: color-mix(in srgb, var(--card) 88%, var(--fg));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 8%, transparent);
+.diagram-edge-label.numbered:not(:has(span)) {
+  padding-right: 3px;
 }
 
-/* A tone tells a group of nodes apart, see the theme in styles.css. The
-   text on it is a dark shade of the same hue. */
-.diagram-node.tone {
-  background: var(--tone);
-  box-shadow: none;
-  color: color-mix(in srgb, var(--tone) 30%, var(--tone-fg));
+.diagram-edge-label.never {
+  color: var(--error);
 }
 
-.diagram-node-label {
+/* Step numbers, on the arrows and in the list under the diagram. */
+.diagram-badge {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.diagram-steps {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.diagram-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: calc(var(--radius) / 2);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 20px;
+  cursor: default;
+  outline: none;
+}
+
+.diagram-steps li.lit {
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
   color: var(--fg);
-  font-weight: 650;
-  font-size: 16px;
 }
 
-.diagram-node.tone .diagram-node-label,
-.diagram-node.tone .diagram-node-detail {
-  color: inherit;
+/* Pointing at a box or step fades everything else and makes the lit
+   arrows flow. */
+.diagram .dim {
+  opacity: 0.22;
 }
 
-.diagram-node-detail {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 13px;
+.diagram-pulse {
+  stroke: transparent;
 }
 
-.text.muted.diagram-warning {
-  color: var(--warning);
-}
-
-@media (max-width: 560px) {
-  .diagram-frame {
-    grid-template-columns: 1fr;
-    gap: 62px;
+@keyframes diagram-pulse-run {
+  to {
+    stroke-dashoffset: -24;
   }
+}
+
+.diagram-arrow.lit .diagram-pulse {
+  stroke: var(--bg);
+  stroke-dasharray: 4 20;
+  animation: diagram-pulse-run 700ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagram-arrow.lit .diagram-pulse {
+    animation: none;
+  }
+}
+
+.diagram-stop {
+  flex: 0 0 8px;
+  height: 8px;
+}
+
+
+/* A spec with a wrong id still draws what it can, and says what is wrong. */
+.diagram-warning {
+  margin: 0;
+  color: var(--warning);
+  font-size: 13px;
 }

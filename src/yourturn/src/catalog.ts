@@ -17,6 +17,17 @@ const option = z.union([
 // A tone tells groups apart and means nothing by itself, see the theme in styles.css.
 const tone = z.enum(["blue", "green", "orange", "violet"]);
 
+// The icons a diagram box can show, by name. The drawings are in diagram-flow.tsx.
+const diagramIcon = z.enum([
+  "terminal", "plug", "server", "door", "package", "puzzle", "cog", "brain", "wrench", "shield",
+  "book", "scale", "palette", "monitor", "phone", "laptop", "radio", "window", "ban", "file",
+  "folder", "list", "hourglass", "play", "hand", "check", "cross", "warning", "user", "users",
+  "globe", "database", "disk", "cloud", "lock", "key", "chat", "mail", "bell", "bolt",
+  "search", "branch", "code", "chip", "layers", "eye", "clock", "bot", "sparkles", "settings",
+  "inbox", "send", "refresh", "trash", "link", "box", "bug", "rocket"
+]);
+export type DiagramIcon = z.infer<typeof diagramIcon>;
+
 const stepNavStep = z.object({
   title: z.string().min(1),
   detail: z.string().nullish(),
@@ -207,20 +218,33 @@ export const catalog = defineCatalog(schema, {
     },
     DiagramFlow: {
       description:
-        "Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer. A node can take a tone to tell groups apart, like client and server.",
+        "Boxes and arrows laid out on their own: who talks to whom, what goes where, what sits on what. Use only when the picture says something the words can't. Boxes can have an icon and a tone, sit in a labelled group, or be stacked as layers. Arrows can carry numbered steps that are listed under the diagram.",
       props: z.object({
         title: z.string().nullish(),
+        caption: z.string().nullish(),
+        shape: z.enum(["flow", "stack"]).nullish(),
+        direction: z.enum(["down", "right"]).nullish(),
         nodes: z.array(z.object({
           id: z.string().min(1),
           label: z.string().min(1),
           detail: z.string().nullish(),
-          tone: tone.nullish()
+          tone: tone.nullish(),
+          icon: diagramIcon.nullish(),
+          group: z.string().nullish(),
+          items: z.array(z.string()).nullish()
         })).min(1),
+        groups: z.array(z.object({
+          id: z.string().min(1),
+          label: z.string().min(1),
+          tone: tone.nullish()
+        })).nullish(),
         edges: z.array(z.object({
           from: z.string().min(1),
           to: z.string().min(1),
-          label: z.string().nullish()
-        }))
+          label: z.string().nullish(),
+          kind: z.enum(["flow", "maybe", "never"]).nullish(),
+          step: z.string().nullish()
+        })).nullish()
       })
     },
     StepNavHorizontal: {

@@ -152,6 +152,21 @@ Follow the shared writing rules in `SKILL.md`. On top of those:
 - A page that only collects input can be shorter: one or two sections, with a
   line of `Text` before the fields that says what they are for.
 
+Dense, from a real page:
+
+> **Settled:** the listener gets no signal, and drawing keeps `next`, your
+> way. Every slot is a middleware chain like the actions, so round 9's "parts
+> or null, the core joins" is withdrawn. **The cost you accept:** a draw that
+> forgets `...next(input)` empties the slot.
+
+The same, plain. It names one thing, says it in words and follows on:
+
+> Drawing now works like actions. Each extension gets what the ones before
+> it drew and passes on its own version, as you asked. So the idea from last
+> round, where the core glued the parts together, is gone. There is one
+> catch. An extension that forgets to pass on what it got wipes out its spot
+> on the screen, for example the whole footer.
+
 ## Text, code and images
 
 `Text`, `Heading`, the `note` of a card and the steps of a `StepNav` are read
@@ -295,7 +310,7 @@ Submitting yields:
 | `Columns` | `gap`: `"sm" \| "md" \| "lg"` (optional) | Responsive two-column layout. Use for paired fields or content that benefits from side-by-side layout on wide screens. |
 | `Card` | `title`: string (optional), `tone` (optional) | Bordered container with optional title. Use it only for grouped subcontent that needs a visible frame. |
 | `Slideshow` | `slides`: `{ title, body? }[]` | Paginated slides with prev/next nav. Display-only. |
-| `DiagramFlow` | `title`: string (optional), `nodes`: `{ id, label, detail?, tone? }[]`, `edges`: `{ from, to, label? }[]` | Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer. Node ids must be unique. |
+| `DiagramFlow` | `title`?, `caption`?, `shape`? (`"flow"` or `"stack"`), `direction`? (`"down"` or `"right"`), `nodes`: `{ id, label, detail?, icon?, tone?, group?, items? }[]`, `groups`?: `{ id, label, tone? }[]`, `edges`?: `{ from, to, label?, step?, kind? }[]` | Boxes and arrows, laid out for you. Use only when the picture says something the words can't. Node ids must be unique. |
 | `StepNavHorizontal` | `steps`: `{ title, detail?, status? }[]` | Display-only step rail for short flows. Its steps are read aloud. Prefer this when progress context helps but a sidebar would waste space. |
 | `StepNavVertical` | `steps`: `{ title, detail?, status? }[]` | Display-only side rail for longer walkthroughs or dense wide layouts. Its steps are read aloud. Use only when the side space is worth it. |
 
@@ -318,12 +333,41 @@ explanation, a before/after review.
 }
 ```
 
-Use `DiagramFlow` sparingly. It is helpful for data flow, lifecycle,
-architecture boundaries, or before/after structure. Do not use it for simple
-forms, short explanations, or obvious summaries. Put each concept in `nodes`
-once and connect them with `edges`.
+Draw a diagram only when the picture says something the words can't: who
+talks to whom, what goes where, what sits on what. One idea per diagram. You
+only say what is linked to what. The layout puts each box below the ones that
+point at it, keeps arrows from crossing boxes and routes loops around the
+side.
 
-A node and a `Card` can take a `tone`: `"blue"`, `"green"`, `"orange"` or
+Pick the shape:
+
+- `"flow"`, the default: things that pass something along. Arrows run down,
+  or right with `direction: "right"`, which fits about 3 columns.
+- `"stack"`: layers that build on each other, top to bottom in the order
+  written. No arrows. A layer can list what it holds in `items`.
+
+Write it like the rest of the page, in plain words:
+
+- `title` says the point. `caption` says how to read it, in one sentence.
+- 3 to 7 boxes. A `label` is 1 to 3 everyday words, never a code name or a
+  path. A `detail` stays under 8 words.
+- Give each box an `icon`, so it is recognised at a glance. Pick one from:
+  terminal, plug, server, door, package, puzzle, cog, brain, wrench, shield,
+  book, scale, palette, monitor, phone, laptop, radio, window, ban, file,
+  folder, list, hourglass, play, hand, check, cross, warning, user, users,
+  globe, database, disk, cloud, lock, key, chat, mail, bell, bolt, search,
+  branch, code, chip, layers, eye, clock, bot, sparkles, settings, inbox,
+  send, refresh, trash, link, box, bug, rocket.
+- `groups` draw a labelled zone around the boxes that live in one place,
+  like "inside the server". A box joins one with `group`.
+- A `step` on an arrow is a short sentence. Steps are numbered on the arrows
+  and listed under the diagram, so the reader can walk through it. Use them
+  when order matters, at most 6. A `label` is a word or two on the arrow.
+- `kind: "maybe"` draws a dashed arrow, for a path that depends on a choice.
+  `kind: "never"` draws a dotted one ending in a red cross, for a path that
+  must not exist.
+
+A node, a group and a `Card` can take a `tone`: `"blue"`, `"green"`, `"orange"` or
 `"violet"`. A tone tells groups apart, like what runs on the machine and what
 runs on the site. It has no meaning of its own, so give the same tone to
 everything of one group, on the whole page, and say in the text or in
@@ -336,15 +380,21 @@ tone for good, bad or a warning.
   "flow": {
     "type": "DiagramFlow",
     "props": {
-      "title": "yourturn round trip",
+      "title": "Where a job's output goes",
+      "caption": "Output stays in the server's memory. It never reaches your chat or the model.",
+      "groups": [{ "id": "server", "label": "stays in the server", "tone": "green" }],
       "nodes": [
-        { "id": "agent", "label": "Agent", "detail": "Authors JSON spec", "tone": "blue" },
-        { "id": "browser", "label": "Browser UI", "detail": "User reviews and submits", "tone": "orange" },
-        { "id": "stdout", "label": "Agent resumes", "detail": "Reads one JSON result", "tone": "blue" }
+        { "id": "job", "label": "Background job", "icon": "monitor", "detail": "prints output", "group": "server" },
+        { "id": "memory", "label": "Server memory", "icon": "brain", "detail": "keeps the newest 64 KB", "group": "server" },
+        { "id": "feed", "label": "Live feed", "icon": "radio", "detail": "updates 10 times a second" },
+        { "id": "pane", "label": "Job pane", "icon": "window", "detail": "what you see" },
+        { "id": "chat", "label": "Chat and model", "icon": "ban", "detail": "never see it", "tone": "orange" }
       ],
       "edges": [
-        { "from": "agent", "to": "browser", "label": "render" },
-        { "from": "browser", "to": "stdout", "label": "submit" }
+        { "from": "job", "to": "memory", "step": "The job's output goes into the server's memory." },
+        { "from": "memory", "to": "feed", "step": "A live feed reads it from there." },
+        { "from": "feed", "to": "pane", "step": "The job pane shows it to you." },
+        { "from": "memory", "to": "chat", "label": "no path", "kind": "never" }
       ]
     }
   }

@@ -456,3 +456,36 @@ A fresh agent that read only the skill folder wrote a chart component around
   big picture first, no unexplained names and concrete consequences, and to
   stay concise. The example spec lost its implicit gotcha ("Old tokens stop
   working") and now explains the migration it offers.
+
+### 2026-10-30: diagrams that are easy to follow, and plain words
+
+- **Diagrams get a layered layout.** The old one put boxes in a CSS grid in
+  the order written and drew arrows between wherever they landed, so arrows
+  zigzagged, pointed back and crossed boxes, and labels sat on the wrong
+  arrow. Now each box goes one row below what points at it, skipped rows get
+  invisible stops, sweeps cut crossings and loops go around the side. Old
+  specs keep working. Turned down: Rough.js, which only adds a hand-drawn
+  look and makes nothing clearer, and a bigger graph library.
+- **What an agent can say grew a little:** `caption`, `shape: "stack"`,
+  `direction: "right"`, `icon`, `groups`, `items`, and on arrows `step` and
+  `kind` ("maybe" dashed, "never" dotted with a red cross). Steps are
+  numbered on the arrows and listed below. Pointing at a box or a step
+  fades the rest.
+- **The look the user picked:** flat boxes with squircle corners, a 7% see-
+  through tint of their tone and no border, a bare line icon in the tone, no
+  shadows. Turned down by the user: a tinted box with a coloured border, an
+  icon in a tinted chip, a sketch look, and a box one step off the card with
+  a big faint icon cut off at the corner, which looked broken.
+- **Icons are a fixed list of 58 Lucide names**, checked by the catalog, so
+  an agent cannot ask for one that is missing. Emoji were turned down, they
+  look different on every system. Lucide is bundled into the diagram chunk,
+  the only bundled package: icons are data, and loading all of Lucide
+  through the import map would fetch about 1600 icons for 58.
+- **Writing rules ask for dead simple words again.** Recent pages were hard
+  to read: a bold label opened every paragraph, text leaned on earlier
+  rounds, code names sat inside sentences. The "simple language" lines had
+  lived in the user's global `AGENTS.md` and were cut on Oct 27. `SKILL.md`
+  now asks for everyday words, about 15 words a sentence, text that flows,
+  explaining from zero in a follow-up, no bold openers and a reread as the
+  user. `authoring.md` shows a dense paragraph from a real page rewritten
+  plainly.

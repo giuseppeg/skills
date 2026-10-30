@@ -29,24 +29,45 @@ Do not use it for a simple yes/no/ok confirmation. Ask in chat instead.
 These apply to every page: explainers, walkthroughs, slides, forms etc.
 
 Users often let agents code and co-design, so they may lack the big
-picture. Write for a smart reader who was not there, and keep it concise.
+picture. They read many pages a day, often tired. Write the way you would
+explain it out loud to a smart friend who was not there: dead simple words,
+short sentences, one thing after the other. The user should get it on the
+first read, without going back.
 
 - Open with a short big picture, so the user can tell what the page is
   about, where it sits in the system and why it matters.
+- Everyday words. Say what a thing does before you name it. A code name
+  (function, field, file, type) only when the reader needs it to act, and
+  then with its meaning in plain words the first time.
 - Name nothing the reader has not met. Say in plain words what a file,
   function, term or earlier decision is the first time it comes up.
+- Explain from zero, also in a follow-up page. Never lean on an earlier
+  round, chat, id or pick ("round 9's idea is withdrawn", "your way", "as
+  before"). Say again, in one sentence, what was settled and what it means.
+- One thought per sentence, about 15 words, rarely over 20. No semicolons.
+  No chains of colons. No second thought in parentheses. No line numbers,
+  paths or code symbols inside a sentence.
+- Make it flow. Each sentence follows from the one before, linked by words
+  like "so", "but", "that's why", "for example". A section tells a small
+  story: what is wrong or asked, what we do about it, what it means for you.
+  Never a stack of separate claims.
 - Make each consequence concrete. Say who is hit and what they would see,
   like "everyone logged in gets logged out once" rather than "old tokens
   stop working".
 - One idea per section. Headings say the point ("Auth now lives in one
   function"), not the topic ("Auth").
 - Short paragraphs of 2 to 4 short sentences. Plain words. No jargon unless
-  defined. Short is not dense, so never compress a point until it is hard to
-  follow.
+  defined. Short is not dense: fewer points said plainly beat many points
+  said densely. Cut a point before you compress it. A section with more than
+  about four points is two sections, or has points to drop.
 - Say why, not what: the constraint, the tradeoff, what would break without it.
 - Pick the few most important things and skip the rest. Guide the reader to
   the spots that need attention.
-- Highlight 1 to 3 keywords per paragraph at most.
+- Highlight 1 to 3 keywords per paragraph at most, inside the sentence.
+  Never open every paragraph with a bold label like "**Settled:**".
+- Before you open the page, read it as the user would. Any sentence you
+  would have to read twice, or that needs this chat to make sense, gets
+  rewritten.
 - End with the conclusion or the decision needed. Before a decision give
   each option in plain words, what it costs and which one you recommend and
   why.

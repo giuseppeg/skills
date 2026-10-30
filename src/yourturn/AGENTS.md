@@ -66,6 +66,8 @@ Result prints to stdout. Add `--no-open` for headless. `npm test` in
   `public/index.html`, so a new library needs an entry there and in `external` of
   `vite.config.ts`. Keep the versions there equal to `package.json`. Views that need
   a heavy library (diffs, screenshots) stay behind `React.lazy` / dynamic `import()`.
+  The one bundled package is `lucide`: its icon drawings are data, so the
+  diagram chunk builds in the few it names.
 - A spec is untrusted data, never code. Built-in components are added by editing
   `catalog.ts` + `components.tsx` and rebuilding. A project adds its own as files in
   `.agents/artifacts/components/`, see `references/components.md`.

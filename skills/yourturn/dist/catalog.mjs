@@ -16117,6 +16117,66 @@ var option = external_exports.union([
   external_exports.object({ label: external_exports.string(), value: external_exports.string() })
 ]);
 var tone = external_exports.enum(["blue", "green", "orange", "violet"]);
+var diagramIcon = external_exports.enum([
+  "terminal",
+  "plug",
+  "server",
+  "door",
+  "package",
+  "puzzle",
+  "cog",
+  "brain",
+  "wrench",
+  "shield",
+  "book",
+  "scale",
+  "palette",
+  "monitor",
+  "phone",
+  "laptop",
+  "radio",
+  "window",
+  "ban",
+  "file",
+  "folder",
+  "list",
+  "hourglass",
+  "play",
+  "hand",
+  "check",
+  "cross",
+  "warning",
+  "user",
+  "users",
+  "globe",
+  "database",
+  "disk",
+  "cloud",
+  "lock",
+  "key",
+  "chat",
+  "mail",
+  "bell",
+  "bolt",
+  "search",
+  "branch",
+  "code",
+  "chip",
+  "layers",
+  "eye",
+  "clock",
+  "bot",
+  "sparkles",
+  "settings",
+  "inbox",
+  "send",
+  "refresh",
+  "trash",
+  "link",
+  "box",
+  "bug",
+  "rocket"
+]);
 var stepNavStep = external_exports.object({
   title: external_exports.string().min(1),
   detail: external_exports.string().nullish(),
@@ -16291,20 +16351,33 @@ var catalog = defineCatalog(schema, {
       })
     },
     DiagramFlow: {
-      description: "Simple relationship diagram for data flow, lifecycle, architecture boundaries, or before/after structure. Use only when a visual makes relationships clearer. A node can take a tone to tell groups apart, like client and server.",
+      description: "Boxes and arrows laid out on their own: who talks to whom, what goes where, what sits on what. Use only when the picture says something the words can't. Boxes can have an icon and a tone, sit in a labelled group, or be stacked as layers. Arrows can carry numbered steps that are listed under the diagram.",
       props: external_exports.object({
         title: external_exports.string().nullish(),
+        caption: external_exports.string().nullish(),
+        shape: external_exports.enum(["flow", "stack"]).nullish(),
+        direction: external_exports.enum(["down", "right"]).nullish(),
         nodes: external_exports.array(external_exports.object({
           id: external_exports.string().min(1),
           label: external_exports.string().min(1),
           detail: external_exports.string().nullish(),
-          tone: tone.nullish()
+          tone: tone.nullish(),
+          icon: diagramIcon.nullish(),
+          group: external_exports.string().nullish(),
+          items: external_exports.array(external_exports.string()).nullish()
         })).min(1),
+        groups: external_exports.array(external_exports.object({
+          id: external_exports.string().min(1),
+          label: external_exports.string().min(1),
+          tone: tone.nullish()
+        })).nullish(),
         edges: external_exports.array(external_exports.object({
           from: external_exports.string().min(1),
           to: external_exports.string().min(1),
-          label: external_exports.string().nullish()
-        }))
+          label: external_exports.string().nullish(),
+          kind: external_exports.enum(["flow", "maybe", "never"]).nullish(),
+          step: external_exports.string().nullish()
+        })).nullish()
       })
     },
     StepNavHorizontal: {
