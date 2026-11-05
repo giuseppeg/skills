@@ -1,4 +1,6 @@
 import { describe, it } from "node:test";
+import { buildSync } from "esbuild";
+import { createRequire } from "node:module";
 import { deepEqual, equal, match, ok } from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -58,6 +60,11 @@ describe("create.mjs", () => {
       ok(existsSync(join(path, "_core", "boot.js")));
       ok(existsSync(join(path, "_core", "yourturn.js")));
       ok(existsSync(join(path, "_core", "style.css")));
+      // Bundled icon drawings carry both their original notices into each page.
+      const iconLicense = readFileSync(join(path, "_core", "LICENSE-lucide.txt"), "utf8");
+      match(iconLicense, /Copyright \(c\) 2026 Lucide Icons and Contributors/);
+      match(iconLicense, /copyright notice and this permission notice appear in all copies/);
+      match(iconLicense, /Copyright \(c\) 2013-present Cole Bemis/);
       const html = readFileSync(join(path, "index.html"), "utf8");
       match(html, /<script type="module" src="\.\/_core\/boot\.js">/);
       match(html, /<script type="application\/json" id="components">\[\]<\/script>/);
@@ -196,6 +203,47 @@ describe("create.mjs", () => {
       };
       const res = create({ cwd, input: { title: "Fine", spec } });
       equal(res.status, 0, res.stderr);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  // Check the renderer's actual arrow geometry without opening a browser.
+  it("draws a visible self-link and keeps its label", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "yourturn-diagram-test-"));
+    try {
+      const renderer = join(cwd, "geometry.cjs");
+      buildSync({
+        stdin: {
+          contents: 'export { layout, measure } from "./src/diagram-flow.tsx";',
+          resolveDir: join(scripts, "..", "..", "..", "src", "yourturn")
+        },
+        bundle: true,
+        platform: "node",
+        format: "cjs",
+        loader: { ".css": "empty" },
+        outfile: renderer
+      });
+      const { layout, measure } = createRequire(import.meta.url)(renderer);
+      const edge = { from: "a", to: "a", label: "retry" };
+      const plan = layout({ nodes: [{ id: "a", label: "Job" }], edges: [edge], stack: false });
+      equal(plan.back.length, 1);
+      for (const down of [true, false]) {
+        const arrows = measure({
+          boxes: new Map([["a", { x: 100, y: 100, w: 120, h: 80 }]]),
+          plan,
+          down,
+          steps: new Map(),
+          width: 400,
+          height: 300
+        });
+        equal(arrows.length, 1);
+        equal(arrows[0].label.text, "retry");
+        equal(down ? arrows[0].tip.y : arrows[0].tip.x, down ? 160 : 190);
+        match(arrows[0].d, down ? /^M 100 120 / : /^M 130 100 /);
+        match(arrows[0].d, / C /);
+        equal(/NaN|undefined/.test(arrows[0].d), false);
+      }
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }

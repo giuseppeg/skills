@@ -129,7 +129,7 @@ type Layout = {
   back: { edge: DiagramEdge; index: number }[];
 };
 
-function layout(props: { nodes: DiagramNode[]; edges: DiagramEdge[]; stack: boolean }): Layout {
+export function layout(props: { nodes: DiagramNode[]; edges: DiagramEdge[]; stack: boolean }): Layout {
   if (props.stack) {
     return { rows: props.nodes.map((node) => [node.id]), forward: [], back: [] };
   }
@@ -137,7 +137,7 @@ function layout(props: { nodes: DiagramNode[]; edges: DiagramEdge[]; stack: bool
   const known = new Set(ids);
   const edges = props.edges
     .map((edge, index) => ({ edge, index }))
-    .filter(({ edge }) => known.has(edge.from) && known.has(edge.to) && edge.from !== edge.to);
+    .filter(({ edge }) => known.has(edge.from) && known.has(edge.to));
 
   const out = new Map(ids.map((id) => [id, edges.filter(({ edge }) => edge.from === id)]));
   const state = new Map<string, "open" | "done">();
@@ -241,7 +241,7 @@ const lead = 4;
 const straight = 14;
 const headLength = 10;
 
-function measure(props: { boxes: Map<string, Box>; plan: Layout; down: boolean; steps: Map<number, number>; width: number; height: number }): Arrow[] {
+export function measure(props: { boxes: Map<string, Box>; plan: Layout; down: boolean; steps: Map<number, number>; width: number; height: number }): Arrow[] {
   const down = props.down;
   function box(id: string) {
     return props.boxes.get(id)!;
@@ -325,13 +325,16 @@ function measure(props: { boxes: Map<string, Box>; plan: Layout; down: boolean; 
     const from = box(edge.from);
     const to = box(edge.to);
     const low = down ? from.x + from.w / 2 < middle : from.y + from.h / 2 < middle;
-    function side(b: Box) {
-      return down ? { x: low ? b.x : b.x + b.w, y: b.y + b.h / 2 } : { x: b.x + b.w / 2, y: low ? b.y : b.y + b.h };
+    function side(args: { box: Box; share: number }) {
+      const b = args.box;
+      return down ? { x: low ? b.x : b.x + b.w, y: b.y + b.h * args.share } : { x: b.x + b.w * args.share, y: low ? b.y : b.y + b.h };
     }
     const out = down ? { x: low ? -1 : 1, y: 0 } : { x: 0, y: low ? -1 : 1 };
     const into = { x: -out.x, y: -out.y };
-    const start = side(from);
-    const tip = side(to);
+    // A self-link needs separate ports, or its loop collapses into one line.
+    const self = edge.from === edge.to;
+    const start = side({ box: from, share: self ? 0.25 : 0.5 });
+    const tip = side({ box: to, share: self ? 0.75 : 0.5 });
     const { a, z, open, close } = ends({ start, startDir: out, tip, dir: into });
     const reach = low ? -32 : 32;
     const far = down

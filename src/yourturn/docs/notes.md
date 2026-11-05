@@ -489,3 +489,29 @@ A fresh agent that read only the skill folder wrote a chart component around
   explaining from zero in a follow-up, no bold openers and a reread as the
   user. `authoring.md` shows a dense paragraph from a real page rewritten
   plainly.
+
+### 2026-11-05: 0.2.0
+
+- **0.2.0 adds diagram features, not just a new look.** Compared with the
+  published 0.1.0 on `main`, the catalog adds optional icons, groups, steps,
+  arrow kinds, direction and stacks. A minor bump describes these new
+  features better than a patch. There was no earlier version bump or stated
+  pre-1.0 breaking-change rule. This release stays below 1.0 rather than
+  claiming a new stable API.
+- **Bundled icons carry their license into every page.** The diagram chunk
+  kept Lucide's short license header but not its copyright and permission
+  text. `public/_core/LICENSE-lucide.txt` now ships both Lucide and Feather
+  notices through the build and the artifact copy. The skill's own MIT
+  license is unchanged.
+- **The spec and answer formats stay at version 1.** Existing documented
+  diagram props are still accepted. Script arguments, project component
+  exports, artifact paths and the answer shape did not change. Empty choices
+  are authoring guidance for new pages, not a change to old saved state.
+- **Old pages keep their own viewer.** Updating the skill does not redraw
+  existing artifacts. To use the new diagrams, create a new artifact from
+  the old spec under a new id. Keep old pages and answers as they are.
+- **Self-links still draw their loop and label.** Release review caught
+  that the new layout skipped arrows back to the same box. They now use
+  separate entry and exit points, so the loop stays visible. One focused
+  geometry test covers the loop and its label in both directions. The
+  diagram additions are compatible, not a breaking format change.
