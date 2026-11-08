@@ -547,3 +547,25 @@ A fresh agent that read only the skill folder wrote a chart component around
   still does not fit. Turned down: patching the one diagram, guessing label
   widths from their letters, and a container query, which could not tell
   how many boxes a row holds.
+
+### 2026-11-08: only a too-wide row scrolls
+
+- **Review fixes for "boxes size to their words".** Making the whole frame
+  scroll clipped whatever stuck out of it: loop labels lost words, and the
+  room padded for a loop pushed vertical diagrams 36px off centre. Now only
+  a row that runs down and is too wide scrolls, its arrows redrawn as it
+  scrolls, and the frame clips nothing. A loop beside rows that run down
+  gets padding only when the frame leaves less than 72px beside a 230px
+  box, and a box alone in its row loops right again (over the top when rows
+  run right). Whether rows that run right fit is now read from the boxes,
+  not the frame's scroll width, which counted zones and labels still placed
+  for the old direction and kept "Two processes, one storage" running down
+  at 900px. A skipped rank's stop is as long as the rank: the arrow runs
+  straight along it, 10px away from the boxes beside it, and its label sits
+  in the gap it leaves by. Labels wrap at 160px, the hidden copies that
+  size the gaps too, and a group's name wraps where it would leave the
+  frame. Left as is: wider gaps for step numbers alone, which squeezed four
+  boxes at 680px back into wrapped titles; the icon above the words in
+  narrow boxes and beside them in wide ones, since a row's boxes match; and
+  the highlight class the player adds, which React drops if the diagram
+  switches direction while it is read, as for code cards.

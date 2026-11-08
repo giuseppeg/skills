@@ -236,9 +236,9 @@ describe("create.mjs", () => {
       });
       const { layout, measure } = createRequire(import.meta.url)(renderer);
       const edge = { from: "a", to: "a", label: "retry" };
-      const plan = layout({ nodes: [{ id: "a", label: "Job" }], edges: [edge], stack: false });
-      equal(plan.back.length, 1);
       for (const down of [true, false]) {
+        const plan = layout({ nodes: [{ id: "a", label: "Job" }], edges: [edge], stack: false, down });
+        equal(plan.back.length, 1);
         const arrows = measure({
           boxes: new Map([["a", { x: 100, y: 100, w: 120, h: 80 }]]),
           plan,
@@ -248,19 +248,25 @@ describe("create.mjs", () => {
         equal(arrows.length, 1);
         equal(arrows[0].label.text, "retry");
         equal(down ? arrows[0].tip.y : arrows[0].tip.x, down ? 160 : 190);
-        match(arrows[0].d, down ? /^M 100 120 / : /^M 130 100 /);
+        match(arrows[0].d, down ? /^M 220 120 / : /^M 130 100 /);
         match(arrows[0].d, / C /);
         equal(/NaN|undefined/.test(arrows[0].d), false);
       }
 
       // A chain that runs right and loops back: the loop goes over the top,
       // the side the frame pads, never under the boxes into the steps list.
+      // When it runs down, the loop goes round the right.
       const chain = ["a", "b", "c", "d"];
-      const loop = layout({
-        nodes: chain.map((id) => ({ id, label: id })),
-        edges: [...chain.slice(1).map((to, i) => ({ from: chain[i], to })), { from: "d", to: "a", label: "zoom" }],
-        stack: false
-      });
+      function chained(args) {
+        return layout({
+          nodes: chain.map((id) => ({ id, label: id })),
+          edges: [...chain.slice(1).map((to, i) => ({ from: chain[i], to })), { from: "d", to: "a", label: "zoom" }],
+          stack: false,
+          down: args.down
+        });
+      }
+      equal(chained({ down: true }).back[0].low, false);
+      const loop = chained({ down: false });
       deepEqual(loop.rows, [["a"], ["b"], ["c"], ["d"]]);
       equal(loop.back[0].low, true);
       const [back] = measure({

@@ -1,4 +1,4 @@
-import { createElement, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createElement, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   AppWindow, Ban, BookOpen, Bell, Bot, Box, Brain, Bug, CircleCheck, CircleX, Clock, Cloud, Code, Cog, Cpu,
   Database, DoorOpen, Eye, FileText, Folder, GitBranch, Globe, Hand, HardDrive, Hourglass, Inbox, Key, Laptop,
@@ -130,7 +130,7 @@ type Layout = {
   back: { edge: DiagramEdge; index: number; low: boolean }[];
 };
 
-export function layout(props: { nodes: DiagramNode[]; edges: DiagramEdge[]; stack: boolean }): Layout {
+export function layout(props: { nodes: DiagramNode[]; edges: DiagramEdge[]; stack: boolean; down: boolean }): Layout {
   if (props.stack) {
     return { rows: props.nodes.map((node) => [node.id]), forward: [], back: [] };
   }
@@ -169,7 +169,8 @@ export function layout(props: { nodes: DiagramNode[]; edges: DiagramEdge[]; stac
   }
 
   /* Layout, part 2: an arrow that skips ranks gets an invisible stop in each
-     rank it crosses, so it runs between the boxes and never through one. */
+     rank it crosses, as long as the rank, so it runs straight past the boxes
+     and never through one. */
   const rows: string[][] = [];
   for (const id of ids) {
     (rows[rank.get(id)!] ??= []).push(id);
@@ -217,14 +218,15 @@ export function layout(props: { nodes: DiagramNode[]; edges: DiagramEdge[]; stac
   }
 
   /* Layout, part 4: a loop goes around the side of the rows its box is
-     nearest to: the first half of its rank, the middle included, is the low
-     side (left, or top when rows run right). The frame keeps room on that
-     side, so a loop never runs into the steps under the diagram. */
+     nearest to, low (left, or top when rows run right) or high. A box in the
+     middle loops right, or over the top when rows run right, where the frame
+     keeps room, so a loop never runs into the steps under the diagram. */
   const back = edges
     .filter(({ index }) => backIndexes.has(index))
     .map(({ edge, index }) => {
       const row = rows[rank.get(edge.from)!];
-      return { edge, index, low: row.indexOf(edge.from) <= (row.length - 1) / 2 };
+      const at = row.indexOf(edge.from) - (row.length - 1) / 2;
+      return { edge, index, low: at < 0 || (at === 0 && !props.down) };
     });
 
   return { rows, forward, back };
@@ -303,15 +305,25 @@ export function measure(props: { boxes: Map<string, Box>; plan: Layout; down: bo
       : { x: args.side === "out" ? b.x + b.w : b.x, y: b.y + b.h * along };
   }
 
-  /* A forward arrow curves through its stops. Each curve is symmetric, so
-     its middle is exactly halfway between its two ends: the label and step
-     number sit there on the first curve, right on the line. */
+  /* A forward arrow curves into each stop and runs straight through it. Each
+     curve is symmetric, so its middle is exactly halfway between its two
+     ends: the label and step number sit there on the first curve, right on
+     the line, in the gap after the box it leaves. */
   const flowDir = down ? { x: 0, y: 1 } : { x: 1, y: 0 };
   const forward = props.plan.forward.map(({ edge, index, via }): Arrow => {
     const start = spot({ id: edge.from, side: "out", index });
     const tip = spot({ id: edge.to, side: "in", index });
     const { a, z, open, close } = ends({ start, startDir: flowDir, tip, dir: flowDir });
-    const points = [a, ...via.map((id) => ({ x: box(id).x + box(id).w / 2, y: box(id).y + box(id).h / 2 })), z];
+    const points = [
+      a,
+      ...via.flatMap((id) => {
+        const b = box(id);
+        return down
+          ? [{ x: b.x + b.w / 2, y: b.y }, { x: b.x + b.w / 2, y: b.y + b.h }]
+          : [{ x: b.x, y: b.y + b.h / 2 }, { x: b.x + b.w, y: b.y + b.h / 2 }];
+      }),
+      z
+    ];
     const curves = points.slice(1).map((p, i) => {
       const q = points[i];
       /* Short handles make the middle run on a slant, not flat. */
@@ -377,7 +389,7 @@ type Focus = { type: "none" } | { type: "node"; id: string } | { type: "step"; i
 export function DiagramFlow(props: DiagramFlowProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const boxRefs = useRef(new Map<string, HTMLElement>());
-  const [drawn, setDrawn] = useState<{ arrows: Arrow[]; zones: { group: DiagramGroup; box: Box; labelEnd: number | null }[] }>({
+  const [drawn, setDrawn] = useState<{ arrows: Arrow[]; zones: { group: DiagramGroup; box: Box; name: CSSProperties }[] }>({
     arrows: [],
     zones: []
   });
@@ -390,7 +402,7 @@ export function DiagramFlow(props: DiagramFlowProps) {
   const right = !down && !stack;
   const edges = props.edges ?? [];
   const groups = props.groups ?? [];
-  const plan = useMemo(() => layout({ nodes: props.nodes, edges, stack }), [props.nodes, props.edges, stack]);
+  const plan = useMemo(() => layout({ nodes: props.nodes, edges, stack, down }), [props.nodes, props.edges, stack, down]);
   const byId = new Map(props.nodes.map((node) => [node.id, node]));
   /* Ids that clash or point at no box. The layout skips those arrows. */
   const duplicates = props.nodes.map((node) => node.id).filter((id, i, ids) => ids.indexOf(id) !== i);
@@ -405,10 +417,9 @@ export function DiagramFlow(props: DiagramFlowProps) {
      between two ranks as wide as the labels on its arrows. Each box spans two
      half rows, so a shorter rank sits centred and every box is as tall as
      the tallest. */
-  const rankOf = new Map(plan.rows.flatMap((row, r) => row.map((id) => [id, r] as const)));
   const tall = Math.max(...plan.rows.map((row) => row.length));
   const grid = {
-    gridTemplateColumns: plan.rows.map(() => "minmax(var(--node-min), max-content)").join(" minmax(var(--rank-gap), auto) "),
+    gridTemplateColumns: plan.rows.map(() => "minmax(120px, max-content)").join(" minmax(var(--rank-gap), auto) "),
     gridTemplateRows: `repeat(${2 * tall}, 1fr)`
   };
   function cell(args: { r: number; x: number }) {
@@ -416,14 +427,21 @@ export function DiagramFlow(props: DiagramFlowProps) {
   }
 
   useLayoutEffect(() => {
+    const frame = frameRef.current!;
     function draw() {
-      const frame = frameRef.current;
-      if (!frame) {
-        return;
-      }
+      const origin = frame.getBoundingClientRect();
+      const boxes = new Map(
+        [...boxRefs.current].map(([id, el]) => {
+          const r = el.getBoundingClientRect();
+          return [id, { x: r.left - origin.left, y: r.top - origin.top, w: r.width, h: r.height }];
+        })
+      );
+      /* Rows that run right overflow when their boxes reach past the frame's
+         padding. Only the boxes count: loops and labels may stick out. */
       if (props.direction === "right" && !stack) {
-        if (needs === null && frame.scrollWidth > frame.clientWidth) {
-          setNeeds(frame.scrollWidth);
+        const over = Math.max(...[...boxes.values()].map((b) => b.x + b.w)) - (frame.clientWidth - parseFloat(getComputedStyle(frame).paddingRight));
+        if (needs === null && over > 1) {
+          setNeeds(frame.clientWidth + over);
           return;
         }
         if (needs !== null && frame.clientWidth >= needs) {
@@ -431,14 +449,6 @@ export function DiagramFlow(props: DiagramFlowProps) {
           return;
         }
       }
-      /* A frame too narrow for a row scrolls sideways, and the arrows with it. */
-      const origin = frame.getBoundingClientRect();
-      const boxes = new Map(
-        [...boxRefs.current].map(([id, el]) => {
-          const r = el.getBoundingClientRect();
-          return [id, { x: r.left - origin.left + frame.scrollLeft, y: r.top - origin.top, w: r.width, h: r.height }];
-        })
-      );
       /* A zone is the box around all of its group's boxes, with some room. */
       const zones = groups.flatMap((group) => {
         const members = props.nodes.filter((node) => node.group === group.id).map((node) => boxes.get(node.id)!);
@@ -453,21 +463,29 @@ export function DiagramFlow(props: DiagramFlowProps) {
         return [{ group, box: { x, y, w, h } }];
       });
       /* A zone's name sits on its top edge. When arrows come in through that
-         edge, the name ends just left of the first one, so none runs over it. */
+         edge, the name ends just left of the first one, so none runs over it.
+         It may run past its zone, but not past the frame. */
       const arrows = measure({ boxes, plan, down, steps });
       const named = zones.map((zone) => {
         const entering = arrows
           .filter((arrow) => byId.get(arrow.to)?.group === zone.group.id && byId.get(arrow.from)?.group !== zone.group.id)
           .filter((arrow) => arrow.dir.y > 0 && arrow.tip.y - zone.box.y < 40)
           .map((arrow) => arrow.tip.x);
-        return { ...zone, labelEnd: entering.length > 0 ? Math.min(...entering) - 14 : null };
+        const end = entering.length > 0 ? Math.min(...entering) - 14 : null;
+        const { x, w } = zone.box;
+        return { ...zone, name: end === null ? { left: 18, maxWidth: frame.clientWidth - x - 18 } : { right: x + w - end, maxWidth: end } };
       });
       setDrawn({ arrows, zones: named });
     }
     draw();
     const observer = new ResizeObserver(draw);
-    observer.observe(frameRef.current!);
-    return () => observer.disconnect();
+    observer.observe(frame);
+    /* A row too wide for the frame scrolls sideways, and its arrows with it. */
+    frame.addEventListener("scroll", draw, { capture: true });
+    return () => {
+      observer.disconnect();
+      frame.removeEventListener("scroll", draw, { capture: true });
+    };
   }, [plan, down, needs, props.groups]);
 
   function lit(arrow: Arrow) {
@@ -522,9 +540,9 @@ export function DiagramFlow(props: DiagramFlowProps) {
         // 1s plus half a second per box, max 6s.
         data-pause={Math.min(6000, 1000 + props.nodes.length * 500)}
       >
-        {drawn.zones.map(({ group, box, labelEnd }) => (
+        {drawn.zones.map(({ group, box, name }) => (
           <div key={group.id} className={`diagram-zone ${group.tone ?? ""}`} style={{ left: box.x, top: box.y, width: box.w, height: box.h }}>
-            <span className="diagram-zone-label" style={labelEnd === null ? { left: 18 } : { right: box.x + box.w - labelEnd }}>
+            <span className="diagram-zone-label" style={name}>
               {group.label}
             </span>
           </div>
@@ -554,7 +572,7 @@ export function DiagramFlow(props: DiagramFlowProps) {
           ? plan.rows.slice(1).map((_, r) => (
               <span key={`gap${r}`} className="diagram-gap" style={{ gridColumn: 2 * r + 2, gridRow: 1 }} aria-hidden="true">
                 {plan.forward
-                  .filter(({ edge, index }) => rankOf.get(edge.from) === r && (edge.label || steps.has(index)))
+                  .filter(({ edge, index }) => plan.rows[r].includes(edge.from) && (edge.label || steps.has(index)))
                   .map(({ edge, index }) => (
                     <span key={index} className={`diagram-edge-label ${steps.has(index) ? "numbered" : ""}`}>
                       {steps.has(index) ? <b className="diagram-badge">{steps.get(index)}</b> : null}
