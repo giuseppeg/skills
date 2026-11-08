@@ -209,7 +209,7 @@ describe("create.mjs", () => {
   });
 
   // Check the renderer's actual arrow geometry without opening a browser.
-  it("draws a visible self-link and keeps its label", async () => {
+  it("draws loops visible and on the side the frame keeps room for", async () => {
     const cwd = mkdtempSync(join(tmpdir(), "yourturn-diagram-test-"));
     try {
       const renderer = join(cwd, "geometry.cjs");
@@ -243,9 +243,7 @@ describe("create.mjs", () => {
           boxes: new Map([["a", { x: 100, y: 100, w: 120, h: 80 }]]),
           plan,
           down,
-          steps: new Map(),
-          width: 400,
-          height: 300
+          steps: new Map()
         });
         equal(arrows.length, 1);
         equal(arrows[0].label.text, "retry");
@@ -254,6 +252,24 @@ describe("create.mjs", () => {
         match(arrows[0].d, / C /);
         equal(/NaN|undefined/.test(arrows[0].d), false);
       }
+
+      // A chain that runs right and loops back: the loop goes over the top,
+      // the side the frame pads, never under the boxes into the steps list.
+      const chain = ["a", "b", "c", "d"];
+      const loop = layout({
+        nodes: chain.map((id) => ({ id, label: id })),
+        edges: [...chain.slice(1).map((to, i) => ({ from: chain[i], to })), { from: "d", to: "a", label: "zoom" }],
+        stack: false
+      });
+      deepEqual(loop.rows, [["a"], ["b"], ["c"], ["d"]]);
+      equal(loop.back[0].low, true);
+      const [back] = measure({
+        boxes: new Map(chain.map((id, i) => [id, { x: i * 200, y: 60, w: 140, h: 90 }])),
+        plan: loop,
+        down: false,
+        steps: new Map()
+      }).filter((arrow) => arrow.from === "d");
+      ok(back.label.y < 60 && back.tip.y === 60, back.d);
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }

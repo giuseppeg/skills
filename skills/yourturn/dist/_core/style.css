@@ -1115,12 +1115,14 @@ diffs-container {
   line-height: 1.45;
 }
 
-/* The frame holds rows of boxes; zones and the SVG with arrows sit behind. */
+/* The frame holds rows of boxes; zones and the SVG with arrows sit behind.
+   A row too wide for the page scrolls sideways instead of crushing its boxes. */
 .diagram-frame {
   position: relative;
   display: flex;
   gap: 72px;
   padding: 6px 0;
+  overflow-x: auto;
 }
 
 .diagram-frame.down,
@@ -1133,23 +1135,50 @@ diffs-container {
 }
 
 .diagram-frame.right {
-  flex-direction: row;
-  gap: 80px;
+  --node-min: 120px;
+  --rank-gap: 40px;
+  display: grid;
+  gap: 22px 0;
 }
 
-/* Zones need room between rows for their own label and the arrow's. */
+/* Zones need room between rows for their own label and the arrow's, and
+   room above the top one for its name. */
 .diagram-frame.grouped {
-  padding: 22px 16px 16px;
+  padding: 30px 16px 16px;
 }
 
 .diagram-frame.down.grouped {
   gap: 92px;
 }
 
+.diagram-frame.right.grouped {
+  --rank-gap: 72px;
+  gap: 40px 0;
+}
+
+/* A loop runs around the rows, so the frame keeps room on its side for the
+   loop and its label: the label's height above or below, its width beside. */
+.diagram-frame.right.loop-low {
+  padding-top: 56px;
+}
+
+.diagram-frame.right.loop-high {
+  padding-bottom: 56px;
+}
+
+.diagram-frame.down.loop-low {
+  padding-left: 72px;
+}
+
+.diagram-frame.down.loop-high {
+  padding-right: 72px;
+}
+
+/* Boxes in a row are as tall as the tallest, so they line up. */
 .diagram-row {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: safe center;
+  align-items: stretch;
   gap: 22px;
   position: relative;
   z-index: 1;
@@ -1160,9 +1189,23 @@ diffs-container {
 }
 
 .diagram-frame.right .diagram-row {
+  display: contents;
+}
+
+/* The hidden labels that size a gap between two ranks. */
+.diagram-gap {
+  display: flex;
   flex-direction: column;
-  flex: 1 1 0;
-  min-width: 0;
+  height: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.diagram-gap .diagram-edge-label {
+  position: static;
+  max-width: none;
+  transform: none;
 }
 
 .diagram-svg {
@@ -1182,14 +1225,17 @@ diffs-container {
 .diagram .violet { --tone: var(--violet); }
 
 /* A box: tinted in its tone, no border, an icon in the same tone,
-   then the label and a short detail. A box with no tone is a light grey. */
+   then the label and a short detail. A box with no tone is a light grey.
+   A box never gets narrower than its words need: in a row too narrow the
+   frame scrolls, and in a narrow box the words wrap under the icon. */
 .diagram-node {
   --tone: color-mix(in srgb, var(--fg) 75%, transparent);
   flex: 0 1 230px;
-  min-width: 0;
+  min-width: 120px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   padding: 12px 16px;
   background: color-mix(in srgb, var(--tone) 7%, transparent);
   border-radius: var(--radius);
@@ -1198,14 +1244,27 @@ diffs-container {
   cursor: default;
 }
 
+/* In a row that runs right the icon sits above the words, so a narrow box
+   gives its words the width. */
 .diagram-frame.right .diagram-node {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  max-width: 230px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+}
+
+.diagram-frame.right .diagram-text {
   flex: 0 0 auto;
-  width: 100%;
 }
 
 .diagram-frame.stack .diagram-node {
   flex: 1 1 auto;
-  flex-wrap: wrap;
+  gap: 12px;
   padding: 16px 18px;
 }
 
@@ -1233,7 +1292,7 @@ diffs-container {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 1 1 100px;
 }
 
 .diagram-label {
@@ -1355,6 +1414,12 @@ diffs-container {
   transform: translate(-13px, -50%);
 }
 
+/* On a line that runs right the words would cover it, so the whole pill is
+   centred on the line, in the gap sized for it. */
+.diagram-frame.right .diagram-edge-label.numbered {
+  transform: translate(-50%, -50%);
+}
+
 .diagram-edge-label.numbered:not(:has(span)) {
   padding-right: 3px;
 }
@@ -1437,6 +1502,12 @@ diffs-container {
 .diagram-stop {
   flex: 0 0 8px;
   height: 8px;
+  align-self: center;
+}
+
+.diagram-frame.right .diagram-stop {
+  width: 8px;
+  place-self: center;
 }
 
 

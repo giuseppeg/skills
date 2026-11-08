@@ -525,3 +525,25 @@ A fresh agent that read only the skill folder wrote a chart component around
   needed no change. The pause is 1 second plus half a second per box, at
   most 6, like a card's per line. Turned down: reading box labels or the
   numbered steps, which would be a long list of fragments read aloud.
+
+### 2026-11-08: boxes size to their words
+
+- **A diagram that runs right no longer crushes its boxes.** The continuo
+  overview showed four boxes in a row with one word per line, boxes of
+  different heights, and a loop back running through the steps under the
+  diagram. The cause: the rows were flex columns of equal share with a fixed
+  80px gap, so the gaps took the width; each column sized its boxes alone;
+  and a loop went to whichever side its box's centre was on, by measurement,
+  which in a single row was the bottom, outside the frame. Now a diagram
+  that runs right is a grid: a column per rank no narrower than 120px and no
+  wider than its words, a gap column as wide as the labels on its arrows,
+  and two half rows per box, so every box is as tall as the tallest and a
+  shorter rank stays centred. The icon sits above the words there. When the
+  grid overflows the frame, the diagram runs down until the frame is wide
+  enough again. The layout picks a loop's side from the order in its rank,
+  ties going over the top or left, and the frame pads that side. Rows that
+  run down make their boxes equally tall, keep them at least 120px wide
+  with the words wrapping under the icon, and scroll sideways when a row
+  still does not fit. Turned down: patching the one diagram, guessing label
+  widths from their letters, and a container query, which could not tell
+  how many boxes a row holds.

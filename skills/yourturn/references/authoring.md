@@ -345,7 +345,8 @@ side.
 Pick the shape:
 
 - `"flow"`, the default: things that pass something along. Arrows run down,
-  or right with `direction: "right"`, which fits about 3 columns.
+  or right with `direction: "right"`, which fits about 4 short boxes in a
+  row. On a page too narrow for them it runs down instead.
 - `"stack"`: layers that build on each other, top to bottom in the order
   written. No arrows. A layer can list what it holds in `items`.
 

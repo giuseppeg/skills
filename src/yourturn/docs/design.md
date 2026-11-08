@@ -212,7 +212,12 @@ A `DiagramFlow` says only what is linked to what. The viewer lays it out:
 each box sits one row below the boxes that point at it, an arrow that skips
 rows gets invisible stops so it runs between boxes, a few sweeps reorder each
 row so fewer arrows cross, and an arrow that closes a loop goes around the
-side. Boxes can carry an icon by name, belong to a labelled group or be
+side the frame keeps room on, so it never runs into the steps listed under
+it. Boxes are as wide as their words need and boxes in a row are as tall as
+each other. A diagram that runs right is a grid with a column per row of
+boxes and a gap column as wide as the labels on its arrows. When that grid
+does not fit the frame, the diagram runs down instead. A row that runs down
+and does not fit scrolls sideways rather than squeezing its boxes. Boxes can carry an icon by name, belong to a labelled group or be
 stacked as layers, and arrows can carry numbered steps listed under the
 diagram. The icon drawings are Lucide's, built into the lazy diagram chunk:
 they are data, so they share nothing with other code and need no line in
