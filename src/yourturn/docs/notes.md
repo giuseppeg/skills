@@ -515,3 +515,13 @@ A fresh agent that read only the skill folder wrote a chart component around
   separate entry and exit points, so the loop stays visible. One focused
   geometry test covers the loop and its label in both directions. The
   diagram additions are compatible, not a breaking format change.
+
+### 2026-11-08: a diagram is read like a code card
+
+- **The player reads a diagram's title and caption, then says "Diagram"
+  and waits.** Before, it skipped the whole diagram, title included. The
+  owner asked for the same treatment as code cards and inputs. The frame
+  carries `data-sentence` and `data-pause`, like a card, so the player
+  needed no change. The pause is 1 second plus half a second per box, at
+  most 6, like a card's per line. Turned down: reading box labels or the
+  numbered steps, which would be a long list of fragments read aloud.

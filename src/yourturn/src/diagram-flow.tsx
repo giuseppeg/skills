@@ -8,6 +8,7 @@ import {
   type IconNode
 } from "lucide";
 import type { DiagramIcon } from "./catalog";
+import { Prose } from "./page";
 import "./diagram-flow.css";
 
 /* What the agent writes: boxes and arrows, plus a few optional fields that
@@ -457,9 +458,25 @@ export function DiagramFlow(props: DiagramFlowProps) {
 
   return (
     <figure className={`diagram ${focus.type === "none" ? "" : "focused"}`}>
-      {props.title ? <figcaption className="diagram-title">{props.title}</figcaption> : null}
-      {props.caption ? <p className="diagram-caption">{props.caption}</p> : null}
-      <div className={`diagram-frame ${stack ? "stack" : down ? "down" : "right"} ${groups.length > 0 ? "grouped" : ""}`} ref={frameRef}>
+      {/* The title and caption are read aloud, then the player says "Diagram"
+          and waits so the reader can look, like it does for a code block. */}
+      {props.title ? (
+        <figcaption className="diagram-title">
+          <Prose text={props.title} />
+        </figcaption>
+      ) : null}
+      {props.caption ? (
+        <p className="diagram-caption">
+          <Prose text={props.caption} />
+        </p>
+      ) : null}
+      <div
+        className={`diagram-frame ${stack ? "stack" : down ? "down" : "right"} ${groups.length > 0 ? "grouped" : ""}`}
+        ref={frameRef}
+        data-sentence="Diagram."
+        // 1s plus half a second per box, max 6s.
+        data-pause={Math.min(6000, 1000 + props.nodes.length * 500)}
+      >
         {drawn.zones.map(({ group, box, labelEnd }) => (
           <div key={group.id} className={`diagram-zone ${group.tone ?? ""}`} style={{ left: box.x, top: box.y, width: box.w, height: box.h }}>
             <span className="diagram-zone-label" style={labelEnd === null ? { left: 18 } : { right: box.x + box.w - labelEnd }}>

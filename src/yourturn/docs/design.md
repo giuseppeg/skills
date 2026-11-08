@@ -279,6 +279,8 @@ any block.
 - The player queries those elements again on every step, because blocks load
   lazily. It marks the active one by toggling a class.
 - A card wrapper sets `data-pause` with the milliseconds to wait after its note.
+  A diagram does the same: its title and caption go through `Prose`, then its
+  frame says "Diagram." and waits. Its boxes, arrows and steps are not read.
 - An input sets `data-stop` and says "Your turn" through `data-sentence`. The
   player announces it and stops, and play goes on from the next sentence.
   Inputs in a row are one stop. `yourturn.js` exports both attributes as

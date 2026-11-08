@@ -1,5 +1,5 @@
 import { describe, it } from "node:test";
-import { buildSync } from "esbuild";
+import { build } from "esbuild";
 import { createRequire } from "node:module";
 import { deepEqual, equal, match, ok } from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -209,11 +209,11 @@ describe("create.mjs", () => {
   });
 
   // Check the renderer's actual arrow geometry without opening a browser.
-  it("draws a visible self-link and keeps its label", () => {
+  it("draws a visible self-link and keeps its label", async () => {
     const cwd = mkdtempSync(join(tmpdir(), "yourturn-diagram-test-"));
     try {
       const renderer = join(cwd, "geometry.cjs");
-      buildSync({
+      await build({
         stdin: {
           contents: 'export { layout, measure } from "./src/diagram-flow.tsx";',
           resolveDir: join(scripts, "..", "..", "..", "src", "yourturn")
@@ -222,6 +222,16 @@ describe("create.mjs", () => {
         platform: "node",
         format: "cjs",
         loader: { ".css": "empty" },
+        // The page shell needs a browser. The geometry only needs `Prose` to exist.
+        plugins: [
+          {
+            name: "no-page",
+            setup(b) {
+              b.onResolve({ filter: /^\.\/page$/ }, () => ({ path: "page", namespace: "no-page" }));
+              b.onLoad({ filter: /.*/, namespace: "no-page" }, () => ({ contents: "export function Prose() {}" }));
+            }
+          }
+        ],
         outfile: renderer
       });
       const { layout, measure } = createRequire(import.meta.url)(renderer);

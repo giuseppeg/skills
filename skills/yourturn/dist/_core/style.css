@@ -257,8 +257,9 @@
   }
 }
 
-/* The input the player stopped on. */
-.field.active {
+/* The input the player stopped on, or the diagram it announced. */
+.field.active,
+.diagram-frame.active {
   border-radius: var(--radius);
   corner-shape: squircle;
   outline: 3px solid color-mix(in srgb, var(--accent) 22%, transparent);

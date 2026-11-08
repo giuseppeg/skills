@@ -169,9 +169,12 @@ The same, plain. It names one thing, says it in words and follows on:
 
 ## Text, code and images
 
-`Text`, `Heading`, the `note` of a card and the steps of a `StepNav` are read
-aloud. The player announces a card and an input, see above. Everything else
-is skipped.
+`Text`, `Heading`, the `note` of a card, the `title` and `caption` of a
+diagram and the steps of a `StepNav` are read aloud. The player announces a
+card, a diagram and an input, see above. A diagram is announced as "Diagram"
+after its caption, with a pause of 1 to 6 seconds (longer for more boxes).
+Its boxes, arrows and steps are not read, so the caption must say the point
+on its own. Everything else is skipped.
 
 | Component | Props | Notes |
 |-----------|-------|-------|
