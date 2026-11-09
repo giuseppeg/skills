@@ -276,16 +276,10 @@
   background: color-mix(in srgb, currentColor 8%, transparent);
 }
 
-/* The sentence being read is inverted: text colour behind, page colour on top. */
 .page-sentence.active {
-  background: var(--text);
-  color: var(--bg);
+  background: color-mix(in srgb, currentColor 18%, transparent);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-}
-
-.page-sentence.active mark {
-  color: inherit;
 }
 
 .page-player {
